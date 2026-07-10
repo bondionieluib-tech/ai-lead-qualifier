@@ -2,6 +2,9 @@
 
 An n8n workflow that automatically classifies real estate leads by intent and urgency, then routes each one to the right next step — agent notification, customer follow-up, or live property matches.
 
+<img width="1326" height="613" alt="image" src="https://github.com/user-attachments/assets/138b6597-09e1-47f9-9fe7-8b84091f965f" />
+
+
 ## What it does
 
 Leads submitted through a Google Form are classified by an AI agent as **hot**, **warm**, or **cold** based on budget, timeline, and pre-approval status. Each classification triggers a different automated path:
