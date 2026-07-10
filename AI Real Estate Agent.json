@@ -1,0 +1,3725 @@
+{
+  "name": "AI Real Estate Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "property-request",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -432,
+        -32
+      ],
+      "id": "YOUR_WEBHOOK_ID",
+      "name": "Webhook",
+      "webhookId": "YOUR_WEBHOOK_ID"
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -256,
+        128
+      ],
+      "id": "6f528440-6e58-43cb-b7d3-c28a705b1000",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "YOUR_GROQ_API_KEY",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n\t\"type\": \"object\",\n\t\"properties\": {\n\t\t\"classification\": {\n          \"type\": \"string\",\n          \"enum\": [\"hot\",\"warm\",\"cold\"],\n          \"description\": \"lead classification\"\n\t\t},\n      \"reason\": {\n      \"type\": \"string\",\n      \"description\": \"reason for the classification\"\n      }\n\t},\n  \"required\": [\"classification\", \"reason\"]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -48,
+        128
+      ],
+      "id": "87e6ed39-488d-48b8-8f1a-26fdde75b76b",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.body }}",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=You are a real estate lead qualifier. Based on the customer information below, analyze and classify the lead as 'hot', 'warm', or 'cold' using these criteria:\n\nHot lead: Pre-approved or paying cash, timeline within 1-3 months, realistic budget for their desired location, clear property requirements\n\nWarm lead: Not yet pre-approved but actively working on it, timeline 3-6 months, has general idea of what they want\n\nCold lead: No financing plan, just browsing, unrealistic budget for desired location, no clear timeline\n\nCustomer details:\nName: {{ $json.body.NAME }}\nProperty Type: {{ $json.body['PROPERTY TYPE'] }}\nCity: {{ $json.body['PREFERRED CITY'] }}\nState: {{ $json.body['PREFERRED STATE'] }}\nBudget Range: {{ $json.body['BUDGET RANGE'] }}\nTimeline: {{ $json.body.TIMELINE }}\nPre-approval Status: {{ $json.body['PRE-APPROVED'] }}\nPurpose: {{ $json.body['Are you planning to Rent or Buy a property?'] }}\nAdditional Notes: {{ $json.body['ADDITIONAL NOTES'] }}\n\nRespond in this exact JSON format only:\n{\n\"classification\": \"hot/warm/cold\",\n\"reason\": \"one sentence explanation\"\n}\""
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -224,
+        -32
+      ],
+      "id": "247cbb3c-ed8c-4167-934e-d33ff8b4a1ca",
+      "name": "AI LEAD QUALIFIER"
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"recipient\": {\n      \"type\": \"string\",\n      \"enum\": [\"agent\", \"customer\"],\n      \"description\": \"Email address of the recipient\"\n    },\n    \"subject\": {\n      \"type\": \"string\",\n      \"description\": \"Email subject line\"\n    }\n  },\n  \"required\": [\"recipient\", \"subject\"]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        544,
+        128
+      ],
+      "id": "d42a58d4-44e7-4a30-915e-25fcdb510fa4",
+      "name": "Structured Output Parser1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "38eb95df-653f-43ce-a4b0-6be24960e0e4",
+              "leftValue": "={{ $json.output.recipient }}",
+              "rightValue": "agent",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        656,
+        -32
+      ],
+      "id": "99165f46-53cd-41d7-9c20-ac8e62896b21",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1TrdaAtrWDXUJsHc7IegThJrUu-1NgLRt_yfEkUJ7EDs",
+          "mode": "list",
+          "cachedResultName": "Property List",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1TrdaAtrWDXUJsHc7IegThJrUu-1NgLRt_yfEkUJ7EDs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1001407738,
+          "mode": "list",
+          "cachedResultName": "Form Responses 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1TrdaAtrWDXUJsHc7IegThJrUu-1NgLRt_yfEkUJ7EDs/edit#gid=1001407738"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "NAME": "={{ $('Webhook').item.json.body.NAME }}",
+            "STATUS": "Done"
+          },
+          "matchingColumns": [
+            "NAME"
+          ],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "NAME",
+              "displayName": "NAME",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "PHONE NUMBER",
+              "displayName": "PHONE NUMBER",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "EMAIL ADDRESS",
+              "displayName": "EMAIL ADDRESS",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "PROPERTY TYPE",
+              "displayName": "PROPERTY TYPE",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "PREFERRED CITY",
+              "displayName": "PREFERRED CITY",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "NUMBER OF BEDROOMS",
+              "displayName": "NUMBER OF BEDROOMS",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "NUMBER OF BATHROOMS",
+              "displayName": "NUMBER OF BATHROOMS",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "BUDGET RANGE",
+              "displayName": "BUDGET RANGE",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Are you planning to Rent or Buy a property?",
+              "displayName": "Are you planning to Rent or Buy a property?",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "TIMELINE",
+              "displayName": "TIMELINE",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "ADDITIONAL NOTES",
+              "displayName": "ADDITIONAL NOTES",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "PRE-APPROVED",
+              "displayName": "PRE-APPROVED",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "PREFERRED STATE",
+              "displayName": "PREFERRED STATE",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "STATUS",
+              "displayName": "STATUS",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1104,
+        -32
+      ],
+      "id": "28af8303-a1d7-4ae9-8f02-b5396a8eddb7",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "deRwKT7kxLM0SIB9",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://api.rentcast.io/v1/properties",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "city",
+              "value": "={{ $('Webhook').item.json.body['PREFERRED CITY'] }}"
+            },
+            {
+              "name": "state",
+              "value": "={{ $('Webhook').item.json.body['PREFERRED STATE'] }}"
+            },
+            {
+              "name": "propertyType",
+              "value": "={{ $('Webhook').item.json.body['PROPERTY TYPE'] }}"
+            },
+            {
+              "name": "bedrooms",
+              "value": "={{ $('Webhook').item.json.body['NUMBER OF BEDROOMS'][0] }}"
+            },
+            {
+              "name": "bathrooms",
+              "value": "={{ $('Webhook').item.json.body['NUMBER OF BATHROOMS'][0] }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Api-key",
+              "value": "YOUR_RENTCAST_API_KEY"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        416,
+        368
+      ],
+      "id": "799a186c-48fe-4f4d-a17a-c3a31c17d188",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "url": "https://api.rentcast.io/v1/avm/rent/long-term",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "address",
+              "value": "={{ $json.formattedAddress }}"
+            },
+            {
+              "name": "bedrooms",
+              "value": "={{ $json.bedrooms }}"
+            },
+            {
+              "name": "bathrooms",
+              "value": "={{ $json.bathrooms }}"
+            },
+            {
+              "name": "compCount",
+              "value": "5"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Api-Key",
+              "value": "YOUR_RENTCAST_API_KEY"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        832,
+        496
+      ],
+      "id": "21646644-1c1b-4ba4-a317-29c1eead7ed3",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "9d4f8004-1d2a-4ee5-9a05-581b3ea662c4",
+              "leftValue": "={{ $('Webhook').item.json.body['Are you planning to Rent or Buy a property?'] }}",
+              "rightValue": "Buy",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        624,
+        368
+      ],
+      "id": "f1220aff-2253-4a16-ba4b-9f42712eda07",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "755d0606-3deb-4ae4-980d-716c50b60cad",
+              "name": "formattedAddress",
+              "value": "={{ $('HTTP Request').item.json.formattedAddress }}",
+              "type": "string"
+            },
+            {
+              "id": "6fe1162c-6890-4549-8194-8d99c7de406a",
+              "name": "bedrooms",
+              "value": "={{ $('HTTP Request').item.json.bedrooms }}",
+              "type": "number"
+            },
+            {
+              "id": "b3d3e164-3f35-4cca-9107-97b23a0bc694",
+              "name": "bathrooms",
+              "value": "={{ $('HTTP Request').item.json.bathrooms }}",
+              "type": "number"
+            },
+            {
+              "id": "d355dd78-70aa-41cd-9af4-c0d2b983e3ef",
+              "name": "squareFootage",
+              "value": "={{ $('HTTP Request').item.json.squareFootage }}",
+              "type": "number"
+            },
+            {
+              "id": "71bb2451-d90e-4734-acb8-f69b7fdfb990",
+              "name": "rent",
+              "value": "={{ $json.rent }}",
+              "type": "number"
+            },
+            {
+              "id": "32836aaa-a1a2-4091-8a39-1f393e2a4a21",
+              "name": "rentRangeLow",
+              "value": "={{ $json.rentRangeLow }}",
+              "type": "number"
+            },
+            {
+              "id": "d557be83-12a6-43a4-a9b7-c310314e04ee",
+              "name": "rentRangeHigh",
+              "value": "={{ $json.rentRangeHigh }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1024,
+        496
+      ],
+      "id": "d4f641c5-18db-4105-bff8-766d5e70d6ad",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "url": "https://api.rentcast.io/v1/avm/value",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "address",
+              "value": "={{ $json.formattedAddress }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Api-Key",
+              "value": "YOUR_RENTCAST_API_KEY"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        832,
+        288
+      ],
+      "id": "65e568ae-444e-4b43-8cb2-b966da61de24",
+      "name": "HTTP Request2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "450276fe-304a-4dc9-b073-95e23262ba6e",
+              "name": "subjectProperty.formattedAddress",
+              "value": "={{ $json.subjectProperty.formattedAddress }}",
+              "type": "string"
+            },
+            {
+              "id": "8e6c22da-cd4f-4d70-8397-d563aab8ad5d",
+              "name": "subjectProperty.bedrooms",
+              "value": "={{ $json.subjectProperty.bedrooms }}",
+              "type": "number"
+            },
+            {
+              "id": "2194e874-3b47-4dd6-92d3-f1b11ec10fc3",
+              "name": "subjectProperty.bathrooms",
+              "value": "={{ $json.subjectProperty.bathrooms }}",
+              "type": "number"
+            },
+            {
+              "id": "3e3bf134-e35f-4178-ab71-ad7ea9d3c46f",
+              "name": "subjectProperty.squareFootage",
+              "value": "={{ $json.subjectProperty.squareFootage }}",
+              "type": "number"
+            },
+            {
+              "id": "5cdc41b5-d2fa-4835-8164-a9fdcdd197c5",
+              "name": "price",
+              "value": "={{ $json.price }}",
+              "type": "number"
+            },
+            {
+              "id": "ce888cdf-a821-4f38-9c0b-281300f43780",
+              "name": "priceRangeLow",
+              "value": "={{ $json.priceRangeLow }}",
+              "type": "number"
+            },
+            {
+              "id": "c93e6108-4581-4694-9d72-39182003a6ed",
+              "name": "priceRangeHigh",
+              "value": "={{ $json.priceRangeHigh }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1024,
+        288
+      ],
+      "id": "6af0a6af-09cf-440c-b7b1-06006cd6ca0c",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1TrdaAtrWDXUJsHc7IegThJrUu-1NgLRt_yfEkUJ7EDs",
+          "mode": "list",
+          "cachedResultName": "Property List",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1TrdaAtrWDXUJsHc7IegThJrUu-1NgLRt_yfEkUJ7EDs/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1001407738,
+          "mode": "list",
+          "cachedResultName": "Form Responses 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1TrdaAtrWDXUJsHc7IegThJrUu-1NgLRt_yfEkUJ7EDs/edit#gid=1001407738"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "NAME": "={{ $('Webhook').item.json.body.NAME }}",
+            "STATUS": "Done"
+          },
+          "matchingColumns": [
+            "NAME"
+          ],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "NAME",
+              "displayName": "NAME",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "PHONE NUMBER",
+              "displayName": "PHONE NUMBER",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "EMAIL ADDRESS",
+              "displayName": "EMAIL ADDRESS",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "PROPERTY TYPE",
+              "displayName": "PROPERTY TYPE",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "PREFERRED CITY",
+              "displayName": "PREFERRED CITY",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "NUMBER OF BEDROOMS",
+              "displayName": "NUMBER OF BEDROOMS",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "NUMBER OF BATHROOMS",
+              "displayName": "NUMBER OF BATHROOMS",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "BUDGET RANGE",
+              "displayName": "BUDGET RANGE",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Are you planning to Rent or Buy a property?",
+              "displayName": "Are you planning to Rent or Buy a property?",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "TIMELINE",
+              "displayName": "TIMELINE",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "ADDITIONAL NOTES",
+              "displayName": "ADDITIONAL NOTES",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "PRE-APPROVED",
+              "displayName": "PRE-APPROVED",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "PREFERRED STATE",
+              "displayName": "PREFERRED STATE",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "STATUS",
+              "displayName": "STATUS",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1520,
+        384
+      ],
+      "id": "351e9e99-682c-4a1f-a74f-6f8de5e976e1",
+      "name": "Update row in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "deRwKT7kxLM0SIB9",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "openrouter/free",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        336,
+        128
+      ],
+      "id": "f81c86f2-6751-4f5b-888f-dcbac7682d61",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "nPVDqIIEhLQRI0c9",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.output }}",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=You are a real estate email specialist. Based on the lead classification and customer details provided, draft the appropriate email.\n\nIf classification is 'hot':\n- Write an URGENT internal email to the agent\n- Subject line must start with [URGENT]\n- Tone is direct and action-oriented\n- Tell the agent to contact the customer within 24 hours\n- Include all customer details and the classification reason using this format:\n\nCustomer details:\nName: {{ $('Webhook').item.json.body.NAME }}\nEmail: {{ $('Webhook').item.json.body['PHONE NUMBER'] }}\nBudget: {{ $('Webhook').item.json.body['BUDGET RANGE'] }}\nCity: {{ $('Webhook').item.json.body['PREFERRED CITY'] }}\nState: {{ $('Webhook').item.json.body['PREFERRED STATE'] }}\nTimeline: {{ $('Webhook').item.json.body.TIMELINE }}\nPre-approval: {{ $('Webhook').item.json.body['PRE-APPROVED'] }}\nClassification: {{ $('AI LEAD QUALIFIER').item.json.output.classification }}\nReason: {{ $('AI LEAD QUALIFIER').item.json.output.reason }}\n\n- End with a clear call to action for the agent\n\nIf classification is 'warm':\n- Write a friendly follow up email to the customer\n- Acknowledge their inquiry warmly\n- Let them know an agent will reach out within 2-3 business days\n- Include 1-2 sentences about what makes your service valuable\n- End by inviting them to reply with any questions\n\nIf classification is 'cold':\n- Write a friendly informational email to the customer\n- Thank them for their interest\n- Provide general information about the property search process\n- Include a soft invitation to reach out when they are ready\n- No urgency, no pressure\n- Keep it short — 2 paragraphs maximum\n\n\nReturn JSON only in this format:\n{\n\"recipient\": \"agent email or customer email\",\n\"subject\": \"email subject line\",\n\"body\": \"full email body\"\n}\""
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        368,
+        -32
+      ],
+      "id": "83e9ed46-2ee7-4ddd-b6c6-ead7144a5faa",
+      "name": "AI Email Assistant"
+    },
+    {
+      "parameters": {
+        "sendTo": "bondionieluib@gmail.com",
+        "subject": "={{ $json.output.subject }}",
+        "message": "=Hi Team.<br><br>\n\nHot lead coming up! Here are customer details listed below:<br><br>\n\nName: {{ $('Webhook').item.json.body.NAME }}<br>\nPhone number: {{ $('Webhook').item.json.body['PHONE NUMBER'] }}<br>\nEmail: {{ $('Webhook').item.json.body['EMAIL ADDRESS'] }}<br>\nBudget: {{ $('Webhook').item.json.body['BUDGET RANGE'] }}<br>\nLocation: <{{ $('Webhook').item.json.body['PREFERRED CITY'] }}br>\nTimeline: {{ $('Webhook').item.json.body.TIMELINE }}<br>\nPre-approval: <{{ $('Webhook').item.json.body['PRE-APPROVED'] }}<br>\nClassification: {{ $('AI LEAD QUALIFIER').item.json.output.classification }}<br>\nReason: {{ $('AI LEAD QUALIFIER').item.json.output.reason }}<br><br>\nPlease contact the customer within 24 hours.\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        864,
+        -128
+      ],
+      "id": "83f06885-3f4c-40f7-8cd5-b02ebc1056cc",
+      "name": "Send Urgent Email",
+      "webhookId": "bf04b8e6-9a5c-4990-bdf4-0891869fff3f",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "PZJCGMxRoGUNWa9a",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Webhook').item.json.body['EMAIL ADDRESS'] }}",
+        "subject": "={{ $json.output.subject }}",
+        "message": "={{ $json.output.body }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        864,
+        64
+      ],
+      "id": "024c16ac-449c-4e83-93c4-e36cd32cf3a1",
+      "name": "Send Customer Email",
+      "webhookId": "b4c6b760-5f90-425d-b804-5bd7c142b8ba",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "PZJCGMxRoGUNWa9a",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Webhook').item.json.body['EMAIL ADDRESS'] }}",
+        "subject": "Your Property Qouote for West Valley!",
+        "message": "=Hi {{ $('Webhook').item.json.body.NAME }},<br><br>\n\nWhile we understand that you are looking around for a property, here are some lists of the properties you might have interests in buying.<br><br>\n\n1.{{ $input.all()[0].json.subjectProperty.formattedAddress }}<br>\nBedrooms: {{ $input.all()[0].json.subjectProperty.bedrooms }}<br>\nBathrooms: {{ $input.all()[0].json.subjectProperty.bathrooms }}<br>\nLot Size(sqft): {{ $input.all()[0].json.subjectProperty.formattedAddress }}<br>\nCurrent Price: ${{ $input.all()[0].json.price }}<br>\nLow Property Price: {{ $input.all()[0].json.priceRangeLow }}<br>\nHigh Property Price: {{ $input.all()[0].json.priceRangeHigh }}<br><br>\n\n2.{{ $input.all()[1].json.subjectProperty.formattedAddress }}<br>\nBedrooms: {{ $input.all()[1].json.subjectProperty.bedrooms }}<br>\nBathrooms: {{ $input.all()[1].json.subjectProperty.bathrooms }}<br>\nLot Size(sqft): {{ $input.all()[1].json.subjectProperty.squareFootage }}<br>\nCurrent Price: ${{ $input.all()[1].json.price }}<br>\nLow Property Price: {{ $input.all()[1].json.priceRangeLow }}<br>\nHigh Property Price: {{ $input.all()[1].json.priceRangeHigh }}<br><br>\n\n3.{{ $input.all()[2].json.subjectProperty.formattedAddress }}<br>\nBedrooms: {{ $input.all()[2].json.subjectProperty.bedrooms }}<br>\nBathrooms: {{ $input.all()[2].json.subjectProperty.bathrooms }}<br>\nLot Size(sqft): {{ $input.all()[2].json.subjectProperty.squareFootage }}<br>\nCurrent Price: ${{ $input.all()[2].json.price }}<br>\nLow Property Price: {{ $input.all()[2].json.priceRangeLow }}<br>\nHigh Property Price: {{ $input.all()[2].json.priceRangeHigh }}<br><br>\n\nIf you have further questions, feel free to email us so we can help you further. Looking forward to hear from you.<br><br>\n\nThank you.<br><br>\n\nWarm Regards,\nReal Estate Team",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1216,
+        288
+      ],
+      "id": "d39f02cc-f2e9-4df1-b6dd-9bd582e93fe3",
+      "name": "Send Property Value Qoute",
+      "webhookId": "c7459707-29dd-4485-a2bd-ce01f68ea1cc",
+      "executeOnce": true,
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "PZJCGMxRoGUNWa9a",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Webhook').item.json.body['EMAIL ADDRESS'] }}",
+        "subject": "=Your Rental Property Options in {{ $('Webhook').item.json.body['PREFERRED CITY'] }}",
+        "message": "=Hi {{ $('Webhook').item.json.body.NAME }},<br><br>\n\nThank you for reaching out to us! Based on your preferences, we found a list of poperties around {{ $('Webhook').item.json.body['PREFERRED CITY'] }} that you might be interested. Since you're looking to rent properties, here's a list of properties you can check:<br><br>\n\n1. {{ $input.all()[0].json.formattedAddress }}<br>\nBedrooms: {{ $input.all()[0].json.bedrooms }}<br>\nBathrooms: {{ $input.all()[0].json.bathrooms }}<br>\nLot Size(sqft): {{ $input.all()[0].json.squareFootage }}<br>\nMonthly Rent: ${{ $input.all()[0].json.rent }}<br>\nLow Rent Price: {{ $input.all()[0].json.rentRangeLow }}<br>\nHigh Rent Price: {{ $input.all()[0].json.rentRangeHigh }}<br><br>\n\n2. {{ $input.all()[1].json.formattedAddress }}<br>\nBedrooms: {{ $input.all()[1].json.bedrooms }}<br>\nBathrooms: {{ $input.all()[1].json.bathrooms }}<br>\nLot Size(sqft): {{ $input.all()[1].json.squareFootage }}<br>\nMonthly Rent: ${{ $input.all()[1].json.rent }}<br>\nLow Rent Price: ${{ $input.all()[1].json.rentRangeLow }}<br>\nHigh Rent Price: ${{ $input.all()[1].json.rentRangeHigh }}<br><br>\n\n3. {{ $input.all()[2].json.formattedAddress }}<br>\nBedrooms: {{ $input.all()[2].json.bedrooms }}<br>\nBathrooms: {{ $input.all()[2].json.bathrooms }}<br>\nLot Size(sqft): {{ $input.all()[2].json.squareFootage }}<br>\nMonthly Rent: ${{ $input.all()[2].json.rent }}<br>\nLow Rent Price: {{ $input.all()[2].json.rentRangeLow }}<br>\nHigh Rent Price: {{ $input.all()[2].json.rentRangeHigh }}<br><br>\n\nIn the meantime, feel free to reply to this email if you have any immediate questions or would like any assistance to look for other properties you are interested in.<br><br>\n\nBest regards,<br>\nThe Real Estate Team",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1216,
+        496
+      ],
+      "id": "cd66ddbe-4346-43cd-8953-263a18e22094",
+      "name": "Send Monthly Rent Qoute",
+      "webhookId": "a4d89ba4-a854-444b-a939-65bd70655758",
+      "executeOnce": true,
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "PZJCGMxRoGUNWa9a",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "e3be3f69-ee11-47fe-a0ce-9319db0cd4f5",
+                    "leftValue": "={{ $json.output.classification }}",
+                    "rightValue": "hot",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.output.classification }}",
+                    "rightValue": "warm",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "875aaedd-dbbb-47ea-bd60-fb03e7d6a01d"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "f7d22a76-8321-4f24-9596-b4cdd6b3d02d",
+                    "leftValue": "={{ $json.output.classification }}",
+                    "rightValue": "cold",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        80,
+        -48
+      ],
+      "id": "49e4d183-73fc-4332-885b-e69f445bade7",
+      "name": "Qualify Lead"
+    }
+  ],
+  "pinData": {
+    "HTTP Request1": [
+      {
+        "json": {
+          "rent": 1300,
+          "rentRangeLow": 1090,
+          "rentRangeHigh": 1510,
+          "latitude": 40.71336,
+          "longitude": -112.028564,
+          "subjectProperty": {
+            "id": "2606-S-Anna-Caroline-Dr,-West-Valley,-UT-84128",
+            "formattedAddress": "2606 S Anna Caroline Dr, West Valley, UT 84128",
+            "addressLine1": "2606 S Anna Caroline Dr",
+            "addressLine2": null,
+            "city": "West Valley",
+            "state": "UT",
+            "stateFips": "49",
+            "zipCode": "84128",
+            "county": "Salt Lake",
+            "countyFips": "035",
+            "latitude": 40.71336,
+            "longitude": -112.028564,
+            "propertyType": "Apartment",
+            "bedrooms": 1,
+            "bathrooms": 1,
+            "squareFootage": 868,
+            "yearBuilt": 2015
+          },
+          "comparables": [
+            {
+              "id": "2785-S-Winsted-Way,-West-Valley-City,-UT-84120",
+              "formattedAddress": "2785 S Winsted Way, West Valley City, UT 84120",
+              "addressLine1": "2785 S Winsted Way",
+              "addressLine2": null,
+              "city": "West Valley City",
+              "state": "UT",
+              "stateFips": "49",
+              "zipCode": "84120",
+              "county": "Salt Lake",
+              "countyFips": "035",
+              "latitude": 40.709567,
+              "longitude": -112.022427,
+              "propertyType": "Apartment",
+              "bedrooms": 1,
+              "bathrooms": 1,
+              "squareFootage": 735,
+              "yearBuilt": 2008,
+              "status": "Active",
+              "price": 1646,
+              "listingType": "Standard",
+              "listedDate": "2025-04-30T00:00:00.000Z",
+              "removedDate": null,
+              "lastSeenDate": "2026-07-07T01:24:13.115Z",
+              "daysOnMarket": 434,
+              "distance": 0.4152,
+              "daysOld": 1,
+              "correlation": 0.9572
+            },
+            {
+              "id": "5301-W-Whitehorse-Ln,-West-Valley-City,-UT-84120",
+              "formattedAddress": "5301 W Whitehorse Ln, West Valley City, UT 84120",
+              "addressLine1": "5301 W Whitehorse Ln",
+              "addressLine2": null,
+              "city": "West Valley City",
+              "state": "UT",
+              "stateFips": "49",
+              "zipCode": "84120",
+              "county": "Salt Lake",
+              "countyFips": "035",
+              "latitude": 40.711258,
+              "longitude": -112.017456,
+              "propertyType": "Apartment",
+              "bedrooms": 1,
+              "bathrooms": 1,
+              "squareFootage": 730,
+              "yearBuilt": 2015,
+              "status": "Active",
+              "price": 1443,
+              "listingType": "Standard",
+              "listedDate": "2024-04-12T00:00:00.000Z",
+              "removedDate": null,
+              "lastSeenDate": "2026-07-07T00:26:57.879Z",
+              "daysOnMarket": 817,
+              "distance": 0.6003,
+              "daysOld": 1,
+              "correlation": 0.953
+            },
+            {
+              "id": "7487-W-Geraint-St,-Magna,-UT-84044",
+              "formattedAddress": "7487 W Geraint St, Magna, UT 84044",
+              "addressLine1": "7487 W Geraint St",
+              "addressLine2": null,
+              "city": "Magna",
+              "state": "UT",
+              "stateFips": "49",
+              "zipCode": "84044",
+              "county": "Salt Lake",
+              "countyFips": "035",
+              "latitude": 40.712795,
+              "longitude": -112.070656,
+              "propertyType": "Apartment",
+              "bedrooms": 1,
+              "bathrooms": 1,
+              "squareFootage": 772,
+              "status": "Active",
+              "price": 1150,
+              "listingType": "Standard",
+              "listedDate": "2025-01-03T00:00:00.000Z",
+              "removedDate": null,
+              "lastSeenDate": "2026-07-07T01:36:38.541Z",
+              "daysOnMarket": 551,
+              "distance": 2.2072,
+              "daysOld": 1,
+              "correlation": 0.94
+            },
+            {
+              "id": "7495-W-Geraint-St,-Magna,-UT-84044",
+              "formattedAddress": "7495 W Geraint St, Magna, UT 84044",
+              "addressLine1": "7495 W Geraint St",
+              "addressLine2": null,
+              "city": "Magna",
+              "state": "UT",
+              "stateFips": "49",
+              "zipCode": "84044",
+              "county": "Salt Lake",
+              "countyFips": "035",
+              "latitude": 40.6987612,
+              "longitude": -112.070213,
+              "propertyType": "Apartment",
+              "bedrooms": 1,
+              "bathrooms": 1,
+              "squareFootage": 772,
+              "status": "Inactive",
+              "price": 1095,
+              "listingType": "Standard",
+              "listedDate": "2025-09-19T00:00:00.000Z",
+              "removedDate": "2025-10-15T00:00:00.000Z",
+              "lastSeenDate": "2025-10-14T02:11:11.654Z",
+              "daysOnMarket": 26,
+              "distance": 2.4061,
+              "daysOld": 267,
+              "correlation": 0.9362
+            },
+            {
+              "id": "7318-W-Laxey-St,-Magna,-UT-84044",
+              "formattedAddress": "7318 W Laxey St, Magna, UT 84044",
+              "addressLine1": "7318 W Laxey St",
+              "addressLine2": null,
+              "city": "Magna",
+              "state": "UT",
+              "stateFips": "49",
+              "zipCode": "84044",
+              "county": "Salt Lake",
+              "countyFips": "035",
+              "latitude": 40.712708,
+              "longitude": -112.066727,
+              "propertyType": "Apartment",
+              "bedrooms": 1,
+              "bathrooms": 1,
+              "squareFootage": 650,
+              "yearBuilt": 2019,
+              "status": "Inactive",
+              "price": 1045,
+              "listingType": "Standard",
+              "listedDate": "2026-03-24T00:00:00.000Z",
+              "removedDate": "2026-06-07T00:00:00.000Z",
+              "lastSeenDate": "2026-06-06T02:52:31.585Z",
+              "daysOnMarket": 75,
+              "distance": 2.0014,
+              "daysOld": 32,
+              "correlation": 0.9096
+            }
+          ]
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "rent": 1110,
+          "rentRangeLow": 970,
+          "rentRangeHigh": 1240,
+          "latitude": 40.701221,
+          "longitude": -111.933929,
+          "subjectProperty": {
+            "id": "1486-W-3300-S,-Apt-2,-West-Valley,-UT-84119",
+            "formattedAddress": "1486 W 3300 S, Apt 2, West Valley, UT 84119",
+            "addressLine1": "1486 W 3300 S",
+            "addressLine2": "Apt 2",
+            "city": "West Valley",
+            "state": "UT",
+            "stateFips": "49",
+            "zipCode": "84119",
+            "county": "Salt Lake",
+            "countyFips": "035",
+            "latitude": 40.701221,
+            "longitude": -111.933929,
+            "propertyType": "Apartment",
+            "bedrooms": 1,
+            "bathrooms": 1,
+            "squareFootage": 525,
+            "yearBuilt": 2020
+          },
+          "comparables": [
+            {
+              "id": "2184-W-3100-S,-West-Valley-City,-UT-84119",
+              "formattedAddress": "2184 W 3100 S, West Valley City, UT 84119",
+              "addressLine1": "2184 W 3100 S",
+              "addressLine2": null,
+              "city": "West Valley City",
+              "state": "UT",
+              "stateFips": "49",
+              "zipCode": "84119",
+              "county": "Salt Lake",
+              "countyFips": "035",
+              "latitude": 40.704579,
+              "longitude": -111.947458,
+              "propertyType": "Apartment",
+              "bedrooms": 1,
+              "bathrooms": 1,
+              "squareFootage": 550,
+              "yearBuilt": 1974,
+              "status": "Active",
+              "price": 1128,
+              "listingType": "Standard",
+              "listedDate": "2025-03-11T00:00:00.000Z",
+              "removedDate": null,
+              "lastSeenDate": "2026-07-07T00:26:57.910Z",
+              "daysOnMarket": 484,
+              "distance": 0.7465,
+              "daysOld": 1,
+              "correlation": 0.9778
+            },
+            {
+              "id": "845-W-Meadowbrook-Expy,-Salt-Lake-City,-UT-84123",
+              "formattedAddress": "845 W Meadowbrook Expy, Salt Lake City, UT 84123",
+              "addressLine1": "845 W Meadowbrook Expy",
+              "addressLine2": null,
+              "city": "Salt Lake City",
+              "state": "UT",
+              "stateFips": "49",
+              "zipCode": "84123",
+              "county": "Salt Lake",
+              "countyFips": "035",
+              "latitude": 40.686892,
+              "longitude": -111.915139,
+              "propertyType": "Apartment",
+              "bedrooms": 1,
+              "bathrooms": 1,
+              "squareFootage": 518,
+              "yearBuilt": 1985,
+              "status": "Active",
+              "price": 1320,
+              "listingType": "Standard",
+              "listedDate": "2024-04-12T00:00:00.000Z",
+              "removedDate": null,
+              "lastSeenDate": "2026-07-07T01:24:13.125Z",
+              "daysOnMarket": 817,
+              "distance": 1.3977,
+              "daysOld": 1,
+              "correlation": 0.9755
+            },
+            {
+              "id": "2515-S-Parkcrest-Dr,-West-Valley-City,-UT-84119",
+              "formattedAddress": "2515 S Parkcrest Dr, West Valley City, UT 84119",
+              "addressLine1": "2515 S Parkcrest Dr",
+              "addressLine2": null,
+              "city": "West Valley City",
+              "state": "UT",
+              "stateFips": "49",
+              "zipCode": "84119",
+              "county": "Salt Lake",
+              "countyFips": "035",
+              "latitude": 40.716386,
+              "longitude": -111.941713,
+              "propertyType": "Apartment",
+              "bedrooms": 1,
+              "bathrooms": 1,
+              "squareFootage": 500,
+              "yearBuilt": 2002,
+              "status": "Inactive",
+              "price": 1149,
+              "listingType": "Standard",
+              "listedDate": "2026-01-08T00:00:00.000Z",
+              "removedDate": "2026-02-22T00:00:00.000Z",
+              "lastSeenDate": "2026-02-21T02:26:58.925Z",
+              "daysOnMarket": 45,
+              "distance": 1.1256,
+              "daysOld": 137,
+              "correlation": 0.9711
+            },
+            {
+              "id": "2084-W-Condie-Dr,-Salt-Lake-City,-UT-84129",
+              "formattedAddress": "2084 W Condie Dr, Salt Lake City, UT 84129",
+              "addressLine1": "2084 W Condie Dr",
+              "addressLine2": null,
+              "city": "Salt Lake City",
+              "state": "UT",
+              "stateFips": "49",
+              "zipCode": "84129",
+              "county": "Salt Lake",
+              "countyFips": "035",
+              "latitude": 40.677738,
+              "longitude": -111.946325,
+              "propertyType": "Apartment",
+              "bedrooms": 1,
+              "bathrooms": 1,
+              "squareFootage": 500,
+              "yearBuilt": 1995,
+              "status": "Inactive",
+              "price": 875,
+              "listingType": "Standard",
+              "listedDate": "2022-03-17T00:00:00.000Z",
+              "removedDate": "2026-02-06T00:00:00.000Z",
+              "lastSeenDate": "2026-02-05T02:58:56.566Z",
+              "daysOnMarket": 1422,
+              "distance": 1.7496,
+              "daysOld": 153,
+              "correlation": 0.9615
+            },
+            {
+              "id": "3825-S-700-W,-Salt-Lake-City,-UT-84119",
+              "formattedAddress": "3825 S 700 W, Salt Lake City, UT 84119",
+              "addressLine1": "3825 S 700 W",
+              "addressLine2": null,
+              "city": "Salt Lake City",
+              "state": "UT",
+              "stateFips": "49",
+              "zipCode": "84119",
+              "county": "Salt Lake",
+              "countyFips": "035",
+              "latitude": 40.688746,
+              "longitude": -111.910399,
+              "propertyType": "Apartment",
+              "bedrooms": 1,
+              "bathrooms": 1,
+              "squareFootage": 563,
+              "yearBuilt": 1997,
+              "status": "Active",
+              "price": 1049,
+              "listingType": "Standard",
+              "listedDate": "2024-04-12T00:00:00.000Z",
+              "removedDate": null,
+              "lastSeenDate": "2026-07-07T01:24:13.133Z",
+              "daysOnMarket": 817,
+              "distance": 1.5058,
+              "daysOld": 1,
+              "correlation": 0.961
+            }
+          ]
+        },
+        "pairedItem": {
+          "item": 1
+        }
+      },
+      {
+        "json": {
+          "rent": 1050,
+          "rentRangeLow": 910,
+          "rentRangeHigh": 1200,
+          "latitude": 40.694963,
+          "longitude": -111.963476,
+          "subjectProperty": {
+            "id": "2986-W-Lehman-Ave,-West-Valley,-UT-84119",
+            "formattedAddress": "2986 W Lehman Ave, West Valley, UT 84119",
+            "addressLine1": "2986 W Lehman Ave",
+            "addressLine2": null,
+            "city": "West Valley",
+            "state": "UT",
+            "stateFips": "49",
+            "zipCode": "84119",
+            "county": "Salt Lake",
+            "countyFips": "035",
+            "latitude": 40.694963,
+            "longitude": -111.963476,
+            "propertyType": "Apartment",
+            "bedrooms": 1,
+            "bathrooms": 1,
+            "squareFootage": 679
+          },
+          "comparables": [
+            {
+              "id": "1812-W-4100-S,-West-Valley-City,-UT-84119",
+              "formattedAddress": "1812 W 4100 S, West Valley City, UT 84119",
+              "addressLine1": "1812 W 4100 S",
+              "addressLine2": null,
+              "city": "West Valley City",
+              "state": "UT",
+              "stateFips": "49",
+              "zipCode": "84119",
+              "county": "Salt Lake",
+              "countyFips": "035",
+              "latitude": 40.683239,
+              "longitude": -111.940742,
+              "propertyType": "Apartment",
+              "bedrooms": 1,
+              "bathrooms": 1,
+              "squareFootage": 688,
+              "yearBuilt": 2022,
+              "status": "Active",
+              "price": 1279,
+              "listingType": "Standard",
+              "listedDate": "2024-04-12T00:00:00.000Z",
+              "removedDate": null,
+              "lastSeenDate": "2026-07-07T00:26:57.849Z",
+              "daysOnMarket": 817,
+              "distance": 1.442,
+              "daysOld": 1,
+              "correlation": 0.9749
+            },
+            {
+              "id": "4139-S-4080-W,-Salt-Lake-City,-UT-84120",
+              "formattedAddress": "4139 S 4080 W, Salt Lake City, UT 84120",
+              "addressLine1": "4139 S 4080 W",
+              "addressLine2": null,
+              "city": "Salt Lake City",
+              "state": "UT",
+              "stateFips": "49",
+              "zipCode": "84120",
+              "county": "Salt Lake",
+              "countyFips": "035",
+              "latitude": 40.68042,
+              "longitude": -111.98808,
+              "propertyType": "Apartment",
+              "bedrooms": 1,
+              "bathrooms": 1,
+              "squareFootage": 675,
+              "status": "Active",
+              "price": 1100,
+              "listingType": "Standard",
+              "listedDate": "2025-04-02T00:00:00.000Z",
+              "removedDate": null,
+              "lastSeenDate": "2026-07-07T01:24:13.083Z",
+              "daysOnMarket": 462,
+              "distance": 1.6362,
+              "daysOld": 1,
+              "correlation": 0.9737
+            },
+            {
+              "id": "2640-W-3800-S,-West-Valley-City,-UT-84119",
+              "formattedAddress": "2640 W 3800 S, West Valley City, UT 84119",
+              "addressLine1": "2640 W 3800 S",
+              "addressLine2": null,
+              "city": "West Valley City",
+              "state": "UT",
+              "stateFips": "49",
+              "zipCode": "84119",
+              "county": "Salt Lake",
+              "countyFips": "035",
+              "latitude": 40.689727,
+              "longitude": -111.956797,
+              "propertyType": "Apartment",
+              "bedrooms": 1,
+              "bathrooms": 1,
+              "squareFootage": 618,
+              "yearBuilt": 1962,
+              "status": "Active",
+              "price": 995,
+              "listingType": "Standard",
+              "listedDate": "2026-05-23T00:00:00.000Z",
+              "removedDate": null,
+              "lastSeenDate": "2026-07-07T01:24:13.162Z",
+              "daysOnMarket": 46,
+              "distance": 0.5039,
+              "daysOld": 1,
+              "correlation": 0.9709
+            },
+            {
+              "id": "2171-W-Kirkham-Way,-Salt-Lake-City,-UT-84129",
+              "formattedAddress": "2171 W Kirkham Way, Salt Lake City, UT 84129",
+              "addressLine1": "2171 W Kirkham Way",
+              "addressLine2": null,
+              "city": "Salt Lake City",
+              "state": "UT",
+              "stateFips": "49",
+              "zipCode": "84129",
+              "county": "Salt Lake",
+              "countyFips": "035",
+              "latitude": 40.676555,
+              "longitude": -111.947893,
+              "propertyType": "Apartment",
+              "bedrooms": 1,
+              "bathrooms": 1,
+              "squareFootage": 700,
+              "yearBuilt": 1960,
+              "status": "Inactive",
+              "price": 1095,
+              "listingType": "Standard",
+              "listedDate": "2026-01-23T00:00:00.000Z",
+              "removedDate": "2026-02-19T00:00:00.000Z",
+              "lastSeenDate": "2026-02-18T02:31:50.053Z",
+              "daysOnMarket": 27,
+              "distance": 1.5131,
+              "daysOld": 140,
+              "correlation": 0.9694
+            },
+            {
+              "id": "3510-W-Lancer-Way,-Salt-Lake-City,-UT-84119",
+              "formattedAddress": "3510 W Lancer Way, Salt Lake City, UT 84119",
+              "addressLine1": "3510 W Lancer Way",
+              "addressLine2": null,
+              "city": "Salt Lake City",
+              "state": "UT",
+              "stateFips": "49",
+              "zipCode": "84119",
+              "county": "Salt Lake",
+              "countyFips": "035",
+              "latitude": 40.693485,
+              "longitude": -111.975105,
+              "propertyType": "Apartment",
+              "bedrooms": 1,
+              "bathrooms": 1,
+              "squareFootage": 618,
+              "status": "Active",
+              "price": 799,
+              "listingType": "Standard",
+              "listedDate": "2025-04-30T00:00:00.000Z",
+              "removedDate": null,
+              "lastSeenDate": "2026-07-07T02:47:10.557Z",
+              "daysOnMarket": 434,
+              "distance": 0.6184,
+              "daysOld": 1,
+              "correlation": 0.9692
+            }
+          ]
+        },
+        "pairedItem": {
+          "item": 2
+        }
+      },
+      {
+        "json": {
+          "rent": 1200,
+          "rentRangeLow": 1120,
+          "rentRangeHigh": 1280,
+          "latitude": 40.702451,
+          "longitude": -111.936043,
+          "subjectProperty": {
+            "id": "1581-W-Alsace-Way,-West-Valley,-UT-84119",
+            "formattedAddress": "1581 W Alsace Way, West Valley, UT 84119",
+            "addressLine1": "1581 W Alsace Way",
+            "addressLine2": null,
+            "city": "West Valley",
+            "state": "UT",
+            "stateFips": "49",
+            "zipCode": "84119",
+            "county": "Salt Lake",
+            "countyFips": "035",
+            "latitude": 40.702451,
+            "longitude": -111.936043,
+            "propertyType": "Apartment",
+            "bedrooms": 1,
+            "bathrooms": 1,
+            "squareFootage": 705,
+            "lastSaleDate": "2021-11-05T00:00:00.000Z",
+            "lastSalePrice": null
+          },
+          "comparables": [
+            {
+              "id": "3810-S-Redwood-Rd,-Salt-Lake-City,-UT-84119",
+              "formattedAddress": "3810 S Redwood Rd, Salt Lake City, UT 84119",
+              "addressLine1": "3810 S Redwood Rd",
+              "addressLine2": null,
+              "city": "Salt Lake City",
+              "state": "UT",
+              "stateFips": "49",
+              "zipCode": "84119",
+              "county": "Salt Lake",
+              "countyFips": "035",
+              "latitude": 40.68749,
+              "longitude": -111.944014,
+              "propertyType": "Apartment",
+              "bedrooms": 1,
+              "bathrooms": 1,
+              "squareFootage": 720,
+              "status": "Active",
+              "price": 1099,
+              "listingType": "Standard",
+              "listedDate": "2024-10-02T00:00:00.000Z",
+              "removedDate": null,
+              "lastSeenDate": "2026-07-07T01:31:21.377Z",
+              "daysOnMarket": 644,
+              "distance": 1.1161,
+              "daysOld": 1,
+              "correlation": 0.978
+            },
+            {
+              "id": "1812-W-4100-S,-West-Valley-City,-UT-84119",
+              "formattedAddress": "1812 W 4100 S, West Valley City, UT 84119",
+              "addressLine1": "1812 W 4100 S",
+              "addressLine2": null,
+              "city": "West Valley City",
+              "state": "UT",
+              "stateFips": "49",
+              "zipCode": "84119",
+              "county": "Salt Lake",
+              "countyFips": "035",
+              "latitude": 40.683239,
+              "longitude": -111.940742,
+              "propertyType": "Apartment",
+              "bedrooms": 1,
+              "bathrooms": 1,
+              "squareFootage": 688,
+              "yearBuilt": 2022,
+              "status": "Active",
+              "price": 1279,
+              "listingType": "Standard",
+              "listedDate": "2024-04-12T00:00:00.000Z",
+              "removedDate": null,
+              "lastSeenDate": "2026-07-07T00:26:57.849Z",
+              "daysOnMarket": 817,
+              "distance": 1.3516,
+              "daysOld": 1,
+              "correlation": 0.9737
+            },
+            {
+              "id": "3600-S-Orion-Cir,-Salt-Lake-City,-UT-84119",
+              "formattedAddress": "3600 S Orion Cir, Salt Lake City, UT 84119",
+              "addressLine1": "3600 S Orion Cir",
+              "addressLine2": null,
+              "city": "Salt Lake City",
+              "state": "UT",
+              "stateFips": "49",
+              "zipCode": "84119",
+              "county": "Salt Lake",
+              "countyFips": "035",
+              "latitude": 40.695184,
+              "longitude": -111.950046,
+              "propertyType": "Apartment",
+              "bedrooms": 1,
+              "bathrooms": 1,
+              "squareFootage": 750,
+              "yearBuilt": 1990,
+              "status": "Active",
+              "price": 1259,
+              "listingType": "Standard",
+              "listedDate": "2025-02-28T00:00:00.000Z",
+              "removedDate": null,
+              "lastSeenDate": "2026-07-07T02:47:10.578Z",
+              "daysOnMarket": 495,
+              "distance": 0.8899,
+              "daysOld": 1,
+              "correlation": 0.9722
+            },
+            {
+              "id": "2171-W-Kirkham-Way,-Salt-Lake-City,-UT-84129",
+              "formattedAddress": "2171 W Kirkham Way, Salt Lake City, UT 84129",
+              "addressLine1": "2171 W Kirkham Way",
+              "addressLine2": null,
+              "city": "Salt Lake City",
+              "state": "UT",
+              "stateFips": "49",
+              "zipCode": "84129",
+              "county": "Salt Lake",
+              "countyFips": "035",
+              "latitude": 40.676555,
+              "longitude": -111.947893,
+              "propertyType": "Apartment",
+              "bedrooms": 1,
+              "bathrooms": 1,
+              "squareFootage": 700,
+              "yearBuilt": 1960,
+              "status": "Inactive",
+              "price": 1095,
+              "listingType": "Standard",
+              "listedDate": "2026-01-23T00:00:00.000Z",
+              "removedDate": "2026-02-19T00:00:00.000Z",
+              "lastSeenDate": "2026-02-18T02:31:50.053Z",
+              "daysOnMarket": 27,
+              "distance": 1.896,
+              "daysOld": 140,
+              "correlation": 0.969
+            },
+            {
+              "id": "2986-W-Lehman-Ave,-West-Valley,-UT-84119",
+              "formattedAddress": "2986 W Lehman Ave, West Valley, UT 84119",
+              "addressLine1": "2986 W Lehman Ave",
+              "addressLine2": null,
+              "city": "West Valley",
+              "state": "UT",
+              "stateFips": "49",
+              "zipCode": "84119",
+              "county": "Salt Lake",
+              "countyFips": "035",
+              "latitude": 40.694963,
+              "longitude": -111.963476,
+              "propertyType": "Apartment",
+              "bedrooms": 1,
+              "bathrooms": 1,
+              "squareFootage": 679,
+              "status": "Active",
+              "price": 1279,
+              "listingType": "Standard",
+              "listedDate": "2024-04-12T00:00:00.000Z",
+              "removedDate": null,
+              "lastSeenDate": "2026-07-07T01:24:13.193Z",
+              "daysOnMarket": 817,
+              "distance": 1.529,
+              "daysOld": 1,
+              "correlation": 0.9679
+            }
+          ]
+        },
+        "pairedItem": {
+          "item": 3
+        }
+      }
+    ],
+    "Edit Fields": [
+      {
+        "json": {
+          "formattedAddress": "2606 S Anna Caroline Dr, West Valley, UT 84128",
+          "bedrooms": 1,
+          "bathrooms": 1,
+          "squareFootage": 868,
+          "rent": 1300,
+          "rentRangeLow": 1090,
+          "rentRangeHigh": 1510
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "formattedAddress": "1486 W 3300 S, Apt 2, West Valley, UT 84119",
+          "bedrooms": 1,
+          "bathrooms": 1,
+          "squareFootage": 525,
+          "rent": 1110,
+          "rentRangeLow": 970,
+          "rentRangeHigh": 1240
+        },
+        "pairedItem": {
+          "item": 1
+        }
+      },
+      {
+        "json": {
+          "formattedAddress": "2986 W Lehman Ave, West Valley, UT 84119",
+          "bedrooms": 1,
+          "bathrooms": 1,
+          "squareFootage": 679,
+          "rent": 1050,
+          "rentRangeLow": 910,
+          "rentRangeHigh": 1200
+        },
+        "pairedItem": {
+          "item": 2
+        }
+      },
+      {
+        "json": {
+          "formattedAddress": "1581 W Alsace Way, West Valley, UT 84119",
+          "bedrooms": 1,
+          "bathrooms": 1,
+          "squareFootage": 705,
+          "rent": 1200,
+          "rentRangeLow": 1120,
+          "rentRangeHigh": 1280
+        },
+        "pairedItem": {
+          "item": 3
+        }
+      }
+    ],
+    "HTTP Request": [
+      {
+        "json": {
+          "id": "3890-S-Cheryl-St,-Apt-2,-West-Valley,-UT-84119",
+          "formattedAddress": "3890 S Cheryl St, Apt 2, West Valley, UT 84119",
+          "addressLine1": "3890 S Cheryl St",
+          "addressLine2": "Apt 2",
+          "city": "West Valley",
+          "state": "UT",
+          "stateFips": "49",
+          "zipCode": "84119",
+          "county": "Salt Lake",
+          "countyFips": "035",
+          "latitude": 40.687199,
+          "longitude": -111.95594,
+          "propertyType": "Condo",
+          "bedrooms": 1,
+          "bathrooms": 1,
+          "squareFootage": 500
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "id": "5508-W-Maudine-Ave,-Unit-3,-West-Valley,-UT-84120",
+          "formattedAddress": "5508 W Maudine Ave, Unit 3, West Valley, UT 84120",
+          "addressLine1": "5508 W Maudine Ave",
+          "addressLine2": "Unit 3",
+          "city": "West Valley",
+          "state": "UT",
+          "stateFips": "49",
+          "zipCode": "84120",
+          "county": "Salt Lake",
+          "countyFips": "035",
+          "latitude": 40.689064,
+          "longitude": -112.022568,
+          "propertyType": "Condo",
+          "bedrooms": 1,
+          "bathrooms": 1
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "id": "5508-Maudine-Ave,-Unit-Basement,-West-Valley,-UT-84120",
+          "formattedAddress": "5508 Maudine Ave, Unit Basement, West Valley, UT 84120",
+          "addressLine1": "5508 Maudine Ave",
+          "addressLine2": "Unit Basement",
+          "city": "West Valley",
+          "state": "UT",
+          "stateFips": "49",
+          "zipCode": "84120",
+          "county": "Salt Lake",
+          "countyFips": "035",
+          "latitude": 40.689126,
+          "longitude": -112.022544,
+          "propertyType": "Condo",
+          "bedrooms": 1,
+          "bathrooms": 1,
+          "lastSaleDate": "2024-02-27T00:00:00.000Z",
+          "lastSalePrice": null,
+          "history": {
+            "2024-02-27": {
+              "event": "Sale",
+              "date": "2024-02-27T00:00:00.000Z"
+            }
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "HTTP Request2": [
+      {
+        "json": {
+          "price": 202000,
+          "priceRangeLow": 180000,
+          "priceRangeHigh": 223000,
+          "latitude": 40.687199,
+          "longitude": -111.95594,
+          "subjectProperty": {
+            "id": "3890-S-Cheryl-St,-Apt-2,-West-Valley,-UT-84119",
+            "formattedAddress": "3890 S Cheryl St, Apt 2, West Valley, UT 84119",
+            "addressLine1": "3890 S Cheryl St",
+            "addressLine2": "Apt 2",
+            "city": "West Valley",
+            "state": "UT",
+            "stateFips": "49",
+            "zipCode": "84119",
+            "county": "Salt Lake",
+            "countyFips": "035",
+            "latitude": 40.687199,
+            "longitude": -111.95594,
+            "propertyType": "Condo",
+            "bedrooms": 1,
+            "bathrooms": 1,
+            "squareFootage": 500
+          },
+          "comparables": [
+            {
+              "id": "3675-S-2200-W,-Apt-22,-West-Valley-City,-UT-84119",
+              "formattedAddress": "3675 S 2200 W, Apt 22, West Valley City, UT 84119",
+              "addressLine1": "3675 S 2200 W",
+              "addressLine2": "Apt 22",
+              "city": "West Valley City",
+              "state": "UT",
+              "stateFips": "49",
+              "zipCode": "84119",
+              "county": "Salt Lake",
+              "countyFips": "035",
+              "latitude": 40.692184,
+              "longitude": -111.947909,
+              "propertyType": "Condo",
+              "bedrooms": 1,
+              "bathrooms": 1,
+              "squareFootage": 664,
+              "lotSize": 436,
+              "yearBuilt": 1975,
+              "status": "Active",
+              "price": 174900,
+              "listingType": "Standard",
+              "listedDate": "2026-04-11T00:00:00.000Z",
+              "removedDate": null,
+              "lastSeenDate": "2026-07-09T10:43:37.205Z",
+              "daysOnMarket": 90,
+              "distance": 0.5444,
+              "daysOld": 0,
+              "correlation": 0.9554
+            },
+            {
+              "id": "3677-S-2200-W,-Apt-37,-West-Valley-City,-UT-84119",
+              "formattedAddress": "3677 S 2200 W, Apt 37, West Valley City, UT 84119",
+              "addressLine1": "3677 S 2200 W",
+              "addressLine2": "Apt 37",
+              "city": "West Valley City",
+              "state": "UT",
+              "stateFips": "49",
+              "zipCode": "84119",
+              "county": "Salt Lake",
+              "countyFips": "035",
+              "latitude": 40.691998,
+              "longitude": -111.947634,
+              "propertyType": "Condo",
+              "bedrooms": 1,
+              "bathrooms": 1,
+              "squareFootage": 664,
+              "lotSize": 436,
+              "yearBuilt": 1975,
+              "status": "Active",
+              "price": 195000,
+              "listingType": "Standard",
+              "listedDate": "2026-07-04T00:00:00.000Z",
+              "removedDate": null,
+              "lastSeenDate": "2026-07-09T07:49:42.425Z",
+              "daysOnMarket": 6,
+              "distance": 0.5477,
+              "daysOld": 1,
+              "correlation": 0.9553
+            },
+            {
+              "id": "3677-S-2200-W,-West-Valley-City,-UT-84119",
+              "formattedAddress": "3677 S 2200 W, West Valley City, UT 84119",
+              "addressLine1": "3677 S 2200 W",
+              "addressLine2": null,
+              "city": "West Valley City",
+              "state": "UT",
+              "stateFips": "49",
+              "zipCode": "84119",
+              "county": "Salt Lake",
+              "countyFips": "035",
+              "latitude": 40.691998,
+              "longitude": -111.947634,
+              "propertyType": "Condo",
+              "bedrooms": 1,
+              "bathrooms": 1,
+              "squareFootage": 664,
+              "lotSize": 436,
+              "yearBuilt": 1975,
+              "status": "Inactive",
+              "price": 205000,
+              "listingType": "Standard",
+              "listedDate": "2026-01-07T00:00:00.000Z",
+              "removedDate": "2026-07-01T00:00:00.000Z",
+              "lastSeenDate": "2026-06-30T11:26:38.796Z",
+              "daysOnMarket": 175,
+              "distance": 0.5477,
+              "daysOld": 9,
+              "correlation": 0.9553
+            },
+            {
+              "id": "3685-S-2200-W,-Apt-79,-West-Valley-City,-UT-84119",
+              "formattedAddress": "3685 S 2200 W, Apt 79, West Valley City, UT 84119",
+              "addressLine1": "3685 S 2200 W",
+              "addressLine2": "Apt 79",
+              "city": "West Valley City",
+              "state": "UT",
+              "stateFips": "49",
+              "zipCode": "84119",
+              "county": "Salt Lake",
+              "countyFips": "035",
+              "latitude": 40.692374,
+              "longitude": -111.946541,
+              "propertyType": "Condo",
+              "bedrooms": 1,
+              "bathrooms": 1,
+              "squareFootage": 664,
+              "lotSize": 436,
+              "yearBuilt": 1975,
+              "status": "Inactive",
+              "price": 182500,
+              "listingType": "Short Sale",
+              "listedDate": "2025-08-02T00:00:00.000Z",
+              "removedDate": "2026-05-12T00:00:00.000Z",
+              "lastSeenDate": "2026-05-11T11:16:04.027Z",
+              "daysOnMarket": 283,
+              "distance": 0.6092,
+              "daysOld": 59,
+              "correlation": 0.954
+            },
+            {
+              "id": "4150-S-Oak-Meadows-Dr-W,-Unit-30,-Taylorsville,-UT-84123",
+              "formattedAddress": "4150 S Oak Meadows Dr W, Unit 30, Taylorsville, UT 84123",
+              "addressLine1": "4150 S Oak Meadows Dr W",
+              "addressLine2": "Unit 30",
+              "city": "Taylorsville",
+              "state": "UT",
+              "stateFips": "49",
+              "zipCode": "84123",
+              "county": "Salt Lake",
+              "countyFips": "035",
+              "latitude": 40.680478,
+              "longitude": -111.93644,
+              "propertyType": "Condo",
+              "bedrooms": 1,
+              "bathrooms": 1,
+              "squareFootage": 662,
+              "lotSize": 436,
+              "yearBuilt": 1985,
+              "status": "Active",
+              "price": 215000,
+              "listingType": "Standard",
+              "listedDate": "2026-07-08T00:00:00.000Z",
+              "removedDate": null,
+              "lastSeenDate": "2026-07-09T05:37:54.744Z",
+              "daysOnMarket": 2,
+              "distance": 1.1235,
+              "daysOld": 1,
+              "correlation": 0.945
+            },
+            {
+              "id": "4150-S-Oak-Meadows-Dr,-Apt-21,-Taylorsville,-UT-84123",
+              "formattedAddress": "4150 S Oak Meadows Dr, Apt 21, Taylorsville, UT 84123",
+              "addressLine1": "4150 S Oak Meadows Dr",
+              "addressLine2": "Apt 21",
+              "city": "Taylorsville",
+              "state": "UT",
+              "stateFips": "49",
+              "zipCode": "84123",
+              "county": "Salt Lake",
+              "countyFips": "035",
+              "latitude": 40.680479,
+              "longitude": -111.936183,
+              "propertyType": "Condo",
+              "bedrooms": 1,
+              "bathrooms": 1,
+              "squareFootage": 662,
+              "lotSize": 436,
+              "yearBuilt": 1985,
+              "status": "Active",
+              "price": 200000,
+              "listingType": "Standard",
+              "listedDate": "2026-06-24T00:00:00.000Z",
+              "removedDate": null,
+              "lastSeenDate": "2026-07-09T08:58:51.059Z",
+              "daysOnMarket": 16,
+              "distance": 1.1358,
+              "daysOld": 1,
+              "correlation": 0.9447
+            },
+            {
+              "id": "4148-S-Oak-Meadows-Dr,-Apt-31,-Taylorsville,-UT-84123",
+              "formattedAddress": "4148 S Oak Meadows Dr, Apt 31, Taylorsville, UT 84123",
+              "addressLine1": "4148 S Oak Meadows Dr",
+              "addressLine2": "Apt 31",
+              "city": "Taylorsville",
+              "state": "UT",
+              "stateFips": "49",
+              "zipCode": "84123",
+              "county": "Salt Lake",
+              "countyFips": "035",
+              "latitude": 40.680641,
+              "longitude": -111.935926,
+              "propertyType": "Condo",
+              "bedrooms": 1,
+              "bathrooms": 1,
+              "squareFootage": 662,
+              "lotSize": 436,
+              "yearBuilt": 1985,
+              "status": "Inactive",
+              "price": 200000,
+              "listingType": "Standard",
+              "listedDate": "2026-02-05T00:00:00.000Z",
+              "removedDate": "2026-05-08T00:00:00.000Z",
+              "lastSeenDate": "2026-05-07T11:03:21.004Z",
+              "daysOnMarket": 92,
+              "distance": 1.1436,
+              "daysOld": 63,
+              "correlation": 0.9443
+            },
+            {
+              "id": "2970-W-3650-S,-Apt-21,-West-Valley-City,-UT-84119",
+              "formattedAddress": "2970 W 3650 S, Apt 21, West Valley City, UT 84119",
+              "addressLine1": "2970 W 3650 S",
+              "addressLine2": "Apt 21",
+              "city": "West Valley City",
+              "state": "UT",
+              "stateFips": "49",
+              "zipCode": "84119",
+              "county": "Salt Lake",
+              "countyFips": "035",
+              "latitude": 40.693383,
+              "longitude": -111.963719,
+              "propertyType": "Condo",
+              "bedrooms": 2,
+              "bathrooms": 1,
+              "squareFootage": 754,
+              "lotSize": 436,
+              "yearBuilt": 1983,
+              "status": "Inactive",
+              "price": 225000,
+              "listingType": "Standard",
+              "listedDate": "2026-02-03T00:00:00.000Z",
+              "removedDate": "2026-02-11T00:00:00.000Z",
+              "lastSeenDate": "2026-02-10T08:32:57.765Z",
+              "daysOnMarket": 8,
+              "distance": 0.5911,
+              "daysOld": 150,
+              "correlation": 0.8601
+            },
+            {
+              "id": "4147-S-2700-W,-Apt-1A,-Taylorsville,-UT-84129",
+              "formattedAddress": "4147 S 2700 W, Apt 1A, Taylorsville, UT 84129",
+              "addressLine1": "4147 S 2700 W",
+              "addressLine2": "Apt 1A",
+              "city": "Taylorsville",
+              "state": "UT",
+              "stateFips": "49",
+              "zipCode": "84129",
+              "county": "Salt Lake",
+              "countyFips": "035",
+              "latitude": 40.680242,
+              "longitude": -111.957114,
+              "propertyType": "Condo",
+              "bedrooms": 2,
+              "bathrooms": 1,
+              "squareFootage": 834,
+              "lotSize": 436,
+              "yearBuilt": 1972,
+              "status": "Inactive",
+              "price": 245000,
+              "listingType": "Standard",
+              "listedDate": "2026-05-04T00:00:00.000Z",
+              "removedDate": "2026-06-03T00:00:00.000Z",
+              "lastSeenDate": "2026-06-02T09:24:23.058Z",
+              "daysOnMarket": 30,
+              "distance": 0.4851,
+              "daysOld": 38,
+              "correlation": 0.8536
+            },
+            {
+              "id": "4165-S-2700-W,-Apt-2D,-Taylorsville,-UT-84129",
+              "formattedAddress": "4165 S 2700 W, Apt 2D, Taylorsville, UT 84129",
+              "addressLine1": "4165 S 2700 W",
+              "addressLine2": "Apt 2D",
+              "city": "Taylorsville",
+              "state": "UT",
+              "stateFips": "49",
+              "zipCode": "84129",
+              "county": "Salt Lake",
+              "countyFips": "035",
+              "latitude": 40.679796,
+              "longitude": -111.957513,
+              "propertyType": "Condo",
+              "bedrooms": 2,
+              "bathrooms": 1,
+              "squareFootage": 868,
+              "lotSize": 436,
+              "yearBuilt": 1972,
+              "status": "Active",
+              "price": 255000,
+              "listingType": "Standard",
+              "listedDate": "2026-06-09T00:00:00.000Z",
+              "removedDate": null,
+              "lastSeenDate": "2026-07-09T09:53:35.544Z",
+              "daysOnMarket": 31,
+              "distance": 0.5187,
+              "daysOld": 1,
+              "correlation": 0.8498
+            },
+            {
+              "id": "3679-S-2200-W,-Apt-50,-West-Valley-City,-UT-84119",
+              "formattedAddress": "3679 S 2200 W, Apt 50, West Valley City, UT 84119",
+              "addressLine1": "3679 S 2200 W",
+              "addressLine2": "Apt 50",
+              "city": "West Valley City",
+              "state": "UT",
+              "stateFips": "49",
+              "zipCode": "84119",
+              "county": "Salt Lake",
+              "countyFips": "035",
+              "latitude": 40.691948,
+              "longitude": -111.947357,
+              "propertyType": "Condo",
+              "bedrooms": 2,
+              "bathrooms": 1,
+              "squareFootage": 887,
+              "lotSize": 436,
+              "yearBuilt": 1975,
+              "status": "Active",
+              "price": 219900,
+              "listingType": "Standard",
+              "listedDate": "2026-05-08T00:00:00.000Z",
+              "removedDate": null,
+              "lastSeenDate": "2026-07-09T10:29:09.178Z",
+              "daysOnMarket": 63,
+              "distance": 0.5573,
+              "daysOld": 1,
+              "correlation": 0.8474
+            },
+            {
+              "id": "3681-S-2200-W,-Unit-65,-West-Valley-City,-UT-84119",
+              "formattedAddress": "3681 S 2200 W, Unit 65, West Valley City, UT 84119",
+              "addressLine1": "3681 S 2200 W",
+              "addressLine2": "Unit 65",
+              "city": "West Valley City",
+              "state": "UT",
+              "stateFips": "49",
+              "zipCode": "84119",
+              "county": "Salt Lake",
+              "countyFips": "035",
+              "latitude": 40.69249,
+              "longitude": -111.946822,
+              "propertyType": "Condo",
+              "bedrooms": 2,
+              "bathrooms": 1,
+              "squareFootage": 879,
+              "lotSize": 436,
+              "yearBuilt": 1975,
+              "status": "Inactive",
+              "price": 200000,
+              "listingType": "Standard",
+              "listedDate": "2026-05-18T00:00:00.000Z",
+              "removedDate": "2026-07-02T00:00:00.000Z",
+              "lastSeenDate": "2026-07-01T10:22:43.411Z",
+              "daysOnMarket": 45,
+              "distance": 0.6022,
+              "daysOld": 9,
+              "correlation": 0.8472
+            },
+            {
+              "id": "3681-S-2200-W,-Apt-57,-West-Valley-City,-UT-84119",
+              "formattedAddress": "3681 S 2200 W, Apt 57, West Valley City, UT 84119",
+              "addressLine1": "3681 S 2200 W",
+              "addressLine2": "Apt 57",
+              "city": "West Valley City",
+              "state": "UT",
+              "stateFips": "49",
+              "zipCode": "84119",
+              "county": "Salt Lake",
+              "countyFips": "035",
+              "latitude": 40.692248,
+              "longitude": -111.947087,
+              "propertyType": "Condo",
+              "bedrooms": 2,
+              "bathrooms": 1,
+              "squareFootage": 888,
+              "lotSize": 436,
+              "yearBuilt": 1975,
+              "status": "Active",
+              "price": 195000,
+              "listingType": "Standard",
+              "listedDate": "2026-07-03T00:00:00.000Z",
+              "removedDate": null,
+              "lastSeenDate": "2026-07-09T07:49:42.492Z",
+              "daysOnMarket": 7,
+              "distance": 0.581,
+              "daysOld": 1,
+              "correlation": 0.8468
+            },
+            {
+              "id": "3685-S-2200-W,-Apt-85,-West-Valley-City,-UT-84119",
+              "formattedAddress": "3685 S 2200 W, Apt 85, West Valley City, UT 84119",
+              "addressLine1": "3685 S 2200 W",
+              "addressLine2": "Apt 85",
+              "city": "West Valley City",
+              "state": "UT",
+              "stateFips": "49",
+              "zipCode": "84119",
+              "county": "Salt Lake",
+              "countyFips": "035",
+              "latitude": 40.69202,
+              "longitude": -111.946541,
+              "propertyType": "Condo",
+              "bedrooms": 2,
+              "bathrooms": 1,
+              "squareFootage": 888,
+              "lotSize": 436,
+              "yearBuilt": 1975,
+              "status": "Active",
+              "price": 195000,
+              "listingType": "Standard",
+              "listedDate": "2026-05-26T00:00:00.000Z",
+              "removedDate": null,
+              "lastSeenDate": "2026-07-09T10:16:39.412Z",
+              "daysOnMarket": 45,
+              "distance": 0.5952,
+              "daysOld": 1,
+              "correlation": 0.8466
+            },
+            {
+              "id": "3575-S-3200-W,-Apt-9D,-Salt-Lake-City,-UT-84119",
+              "formattedAddress": "3575 S 3200 W, Apt 9D, Salt Lake City, UT 84119",
+              "addressLine1": "3575 S 3200 W",
+              "addressLine2": "Apt 9D",
+              "city": "Salt Lake City",
+              "state": "UT",
+              "stateFips": "49",
+              "zipCode": "84119",
+              "county": "Salt Lake",
+              "countyFips": "035",
+              "latitude": 40.695256,
+              "longitude": -111.966029,
+              "propertyType": "Condo",
+              "bedrooms": 2,
+              "bathrooms": 1,
+              "squareFootage": 859,
+              "lotSize": 436,
+              "yearBuilt": 1979,
+              "status": "Inactive",
+              "price": 239900,
+              "listingType": "Standard",
+              "listedDate": "2026-05-30T00:00:00.000Z",
+              "removedDate": "2026-06-05T00:00:00.000Z",
+              "lastSeenDate": "2026-06-04T05:42:08.758Z",
+              "daysOnMarket": 6,
+              "distance": 0.7685,
+              "daysOld": 36,
+              "correlation": 0.8459
+            }
+          ]
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "price": 404000,
+          "priceRangeLow": 337000,
+          "priceRangeHigh": 471000,
+          "latitude": 40.689064,
+          "longitude": -112.022568,
+          "subjectProperty": {
+            "id": "5508-W-Maudine-Ave,-Unit-3,-West-Valley,-UT-84120",
+            "formattedAddress": "5508 W Maudine Ave, Unit 3, West Valley, UT 84120",
+            "addressLine1": "5508 W Maudine Ave",
+            "addressLine2": "Unit 3",
+            "city": "West Valley",
+            "state": "UT",
+            "stateFips": "49",
+            "zipCode": "84120",
+            "county": "Salt Lake",
+            "countyFips": "035",
+            "latitude": 40.689064,
+            "longitude": -112.022568,
+            "propertyType": "Condo",
+            "bedrooms": 1,
+            "bathrooms": 1
+          },
+          "comparables": [
+            {
+              "id": "4716-W-Villa-View-Dr-S,-Unit-C,-West-Valley-City,-UT-84120",
+              "formattedAddress": "4716 W Villa View Dr S, Unit C, West Valley City, UT 84120",
+              "addressLine1": "4716 W Villa View Dr S",
+              "addressLine2": "Unit C",
+              "city": "West Valley City",
+              "state": "UT",
+              "stateFips": "49",
+              "zipCode": "84120",
+              "county": "Salt Lake",
+              "countyFips": "035",
+              "latitude": 40.695518,
+              "longitude": -112.003997,
+              "propertyType": "Condo",
+              "bedrooms": 2,
+              "bathrooms": 1,
+              "squareFootage": 1502,
+              "lotSize": 436,
+              "yearBuilt": 2001,
+              "status": "Inactive",
+              "price": 395000,
+              "listingType": "Standard",
+              "listedDate": "2026-03-20T00:00:00.000Z",
+              "removedDate": "2026-05-07T00:00:00.000Z",
+              "lastSeenDate": "2026-05-06T09:32:28.367Z",
+              "daysOnMarket": 48,
+              "distance": 1.0714,
+              "daysOld": 65,
+              "correlation": 0.882
+            },
+            {
+              "id": "3575-S-Villa-View-Dr-W,-Unit-C,-West-Valley-City,-UT-84120",
+              "formattedAddress": "3575 S Villa View Dr W, Unit C, West Valley City, UT 84120",
+              "addressLine1": "3575 S Villa View Dr W",
+              "addressLine2": "Unit C",
+              "city": "West Valley City",
+              "state": "UT",
+              "stateFips": "49",
+              "zipCode": "84120",
+              "county": "Salt Lake",
+              "countyFips": "035",
+              "latitude": 40.694904,
+              "longitude": -112.001998,
+              "propertyType": "Condo",
+              "bedrooms": 2,
+              "bathrooms": 1.5,
+              "squareFootage": 1167,
+              "lotSize": 436,
+              "yearBuilt": 2000,
+              "status": "Active",
+              "price": 369900,
+              "listingType": "Standard",
+              "listedDate": "2026-04-02T00:00:00.000Z",
+              "removedDate": null,
+              "lastSeenDate": "2026-07-08T11:01:29.123Z",
+              "daysOnMarket": 98,
+              "distance": 1.152,
+              "daysOld": 1,
+              "correlation": 0.8481
+            },
+            {
+              "id": "3549-S-Villa-View-Dr,-Unit-D,-West-Valley-City,-UT-84120",
+              "formattedAddress": "3549 S Villa View Dr, Unit D, West Valley City, UT 84120",
+              "addressLine1": "3549 S Villa View Dr",
+              "addressLine2": "Unit D",
+              "city": "West Valley City",
+              "state": "UT",
+              "stateFips": "49",
+              "zipCode": "84120",
+              "county": "Salt Lake",
+              "countyFips": "035",
+              "latitude": 40.695131,
+              "longitude": -112.001954,
+              "propertyType": "Condo",
+              "bedrooms": 3,
+              "bathrooms": 1,
+              "squareFootage": 1617,
+              "lotSize": 436,
+              "yearBuilt": 2001,
+              "status": "Active",
+              "price": 447500,
+              "listingType": "Standard",
+              "listedDate": "2026-05-12T00:00:00.000Z",
+              "removedDate": null,
+              "lastSeenDate": "2026-07-09T10:28:28.317Z",
+              "daysOnMarket": 59,
+              "distance": 1.1597,
+              "daysOld": 1,
+              "correlation": 0.7857
+            },
+            {
+              "id": "4759-W-Valley-Villa-Dr,-Unit-D,-West-Valley-City,-UT-84120",
+              "formattedAddress": "4759 W Valley Villa Dr, Unit D, West Valley City, UT 84120",
+              "addressLine1": "4759 W Valley Villa Dr",
+              "addressLine2": "Unit D",
+              "city": "West Valley City",
+              "state": "UT",
+              "stateFips": "49",
+              "zipCode": "84120",
+              "county": "Salt Lake",
+              "countyFips": "035",
+              "latitude": 40.694431,
+              "longitude": -112.004908,
+              "propertyType": "Condo",
+              "bedrooms": 3,
+              "bathrooms": 1.5,
+              "squareFootage": 1674,
+              "lotSize": 436,
+              "yearBuilt": 2000,
+              "status": "Active",
+              "price": 340000,
+              "listingType": "Standard",
+              "listedDate": "2026-02-04T00:00:00.000Z",
+              "removedDate": null,
+              "lastSeenDate": "2026-07-08T11:09:22.207Z",
+              "daysOnMarket": 155,
+              "distance": 0.9978,
+              "daysOld": 1,
+              "correlation": 0.7568
+            },
+            {
+              "id": "4719-W-Valley-Villa-Dr-S,-West-Valley-City,-UT-84120",
+              "formattedAddress": "4719 W Valley Villa Dr S, West Valley City, UT 84120",
+              "addressLine1": "4719 W Valley Villa Dr S",
+              "addressLine2": null,
+              "city": "West Valley City",
+              "state": "UT",
+              "stateFips": "49",
+              "zipCode": "84120",
+              "county": "Salt Lake",
+              "countyFips": "035",
+              "latitude": 40.69445,
+              "longitude": -112.004059,
+              "propertyType": "Condo",
+              "bedrooms": 3,
+              "bathrooms": 1.5,
+              "squareFootage": 1674,
+              "lotSize": 436,
+              "yearBuilt": 2000,
+              "status": "Inactive",
+              "price": 394000,
+              "listingType": "Standard",
+              "listedDate": "2026-02-11T00:00:00.000Z",
+              "removedDate": "2026-04-19T00:00:00.000Z",
+              "lastSeenDate": "2026-04-18T10:49:03.526Z",
+              "daysOnMarket": 67,
+              "distance": 1.0398,
+              "daysOld": 82,
+              "correlation": 0.7555
+            },
+            {
+              "id": "4789-W-Valley-Villa-Dr,-Unit-B,-West-Valley-City,-UT-84120",
+              "formattedAddress": "4789 W Valley Villa Dr, Unit B, West Valley City, UT 84120",
+              "addressLine1": "4789 W Valley Villa Dr",
+              "addressLine2": "Unit B",
+              "city": "West Valley City",
+              "state": "UT",
+              "stateFips": "49",
+              "zipCode": "84120",
+              "county": "Salt Lake",
+              "countyFips": "035",
+              "latitude": 40.694605,
+              "longitude": -112.005197,
+              "propertyType": "Condo",
+              "bedrooms": 3,
+              "bathrooms": 2,
+              "squareFootage": 2057,
+              "lotSize": 436,
+              "yearBuilt": 2000,
+              "status": "Active",
+              "price": 399999,
+              "listingType": "Standard",
+              "listedDate": "2026-04-23T00:00:00.000Z",
+              "removedDate": null,
+              "lastSeenDate": "2026-07-09T10:41:54.231Z",
+              "daysOnMarket": 78,
+              "distance": 0.9884,
+              "daysOld": 0,
+              "correlation": 0.7246
+            },
+            {
+              "id": "3689-S-5450-W,-West-Valley-City,-UT-84120",
+              "formattedAddress": "3689 S 5450 W, West Valley City, UT 84120",
+              "addressLine1": "3689 S 5450 W",
+              "addressLine2": null,
+              "city": "West Valley City",
+              "state": "UT",
+              "stateFips": "49",
+              "zipCode": "84120",
+              "county": "Salt Lake",
+              "countyFips": "035",
+              "latitude": 40.692011,
+              "longitude": -112.020623,
+              "propertyType": "Land",
+              "lotSize": 29621,
+              "status": "Active",
+              "price": 535000,
+              "listingType": "Standard",
+              "listedDate": "2026-05-27T00:00:00.000Z",
+              "removedDate": null,
+              "lastSeenDate": "2026-07-09T10:16:39.451Z",
+              "daysOnMarket": 44,
+              "distance": 0.2279,
+              "daysOld": 1,
+              "correlation": 0.691
+            },
+            {
+              "id": "3615-S-5450-W,-West-Valley-City,-UT-84120",
+              "formattedAddress": "3615 S 5450 W, West Valley City, UT 84120",
+              "addressLine1": "3615 S 5450 W",
+              "addressLine2": null,
+              "city": "West Valley City",
+              "state": "UT",
+              "stateFips": "49",
+              "zipCode": "84120",
+              "county": "Salt Lake",
+              "countyFips": "035",
+              "latitude": 40.694295,
+              "longitude": -112.020932,
+              "propertyType": "Single Family",
+              "bedrooms": 2,
+              "bathrooms": 1,
+              "squareFootage": 1092,
+              "lotSize": 8712,
+              "yearBuilt": 1942,
+              "status": "Active",
+              "price": 275000,
+              "listingType": "Standard",
+              "listedDate": "2026-06-26T00:00:00.000Z",
+              "removedDate": null,
+              "lastSeenDate": "2026-07-09T08:58:50.976Z",
+              "daysOnMarket": 14,
+              "distance": 0.3719,
+              "daysOld": 1,
+              "correlation": 0.6811
+            },
+            {
+              "id": "3315-S-6400-W,-West-Valley-City,-UT-84128",
+              "formattedAddress": "3315 S 6400 W, West Valley City, UT 84128",
+              "addressLine1": "3315 S 6400 W",
+              "addressLine2": null,
+              "city": "West Valley City",
+              "state": "UT",
+              "stateFips": "49",
+              "zipCode": "84128",
+              "county": "Salt Lake",
+              "countyFips": "035",
+              "latitude": 40.70006,
+              "longitude": -112.042667,
+              "propertyType": "Land",
+              "lotSize": 53143,
+              "status": "Inactive",
+              "price": 329900,
+              "listingType": "Standard",
+              "listedDate": "2026-01-14T00:00:00.000Z",
+              "removedDate": "2026-01-29T00:00:00.000Z",
+              "lastSeenDate": "2026-01-28T09:05:13.189Z",
+              "daysOnMarket": 15,
+              "distance": 1.2998,
+              "daysOld": 163,
+              "correlation": 0.6671
+            },
+            {
+              "id": "3896-S-6325-W,-West-Valley-City,-UT-84128",
+              "formattedAddress": "3896 S 6325 W, West Valley City, UT 84128",
+              "addressLine1": "3896 S 6325 W",
+              "addressLine2": null,
+              "city": "West Valley City",
+              "state": "UT",
+              "stateFips": "49",
+              "zipCode": "84128",
+              "county": "Salt Lake",
+              "countyFips": "035",
+              "latitude": 40.687006,
+              "longitude": -112.042303,
+              "propertyType": "Single Family",
+              "bedrooms": 2,
+              "bathrooms": 1,
+              "squareFootage": 1590,
+              "lotSize": 8276,
+              "yearBuilt": 1985,
+              "status": "Inactive",
+              "price": 410000,
+              "listingType": "Standard",
+              "listedDate": "2025-10-24T00:00:00.000Z",
+              "removedDate": "2026-01-13T00:00:00.000Z",
+              "lastSeenDate": "2026-01-12T10:12:48.247Z",
+              "daysOnMarket": 81,
+              "distance": 1.0448,
+              "daysOld": 179,
+              "correlation": 0.6658
+            },
+            {
+              "id": "4732-W-Villa-View-Dr-S,-Unit-D,-West-Valley-City,-UT-84120",
+              "formattedAddress": "4732 W Villa View Dr S, Unit D, West Valley City, UT 84120",
+              "addressLine1": "4732 W Villa View Dr S",
+              "addressLine2": "Unit D",
+              "city": "West Valley City",
+              "state": "UT",
+              "stateFips": "49",
+              "zipCode": "84120",
+              "county": "Salt Lake",
+              "countyFips": "035",
+              "latitude": 40.695572,
+              "longitude": -112.004277,
+              "propertyType": "Condo",
+              "bedrooms": 3,
+              "bathrooms": 3,
+              "squareFootage": 1674,
+              "lotSize": 436,
+              "yearBuilt": 2001,
+              "status": "Active",
+              "price": 430000,
+              "listingType": "Standard",
+              "listedDate": "2026-07-04T00:00:00.000Z",
+              "removedDate": null,
+              "lastSeenDate": "2026-07-09T07:49:42.435Z",
+              "daysOnMarket": 6,
+              "distance": 1.0597,
+              "daysOld": 1,
+              "correlation": 0.6582
+            },
+            {
+              "id": "6479-W-Kings-Dr,-West-Valley-City,-UT-84128",
+              "formattedAddress": "6479 W Kings Dr, West Valley City, UT 84128",
+              "addressLine1": "6479 W Kings Dr",
+              "addressLine2": null,
+              "city": "West Valley City",
+              "state": "UT",
+              "stateFips": "49",
+              "zipCode": "84128",
+              "county": "Salt Lake",
+              "countyFips": "035",
+              "latitude": 40.68439,
+              "longitude": -112.045829,
+              "propertyType": "Single Family",
+              "bathrooms": 2,
+              "squareFootage": 1796,
+              "lotSize": 11761,
+              "yearBuilt": 1977,
+              "status": "Inactive",
+              "price": 459000,
+              "listingType": "Standard",
+              "listedDate": "2026-01-31T00:00:00.000Z",
+              "removedDate": "2026-02-02T00:00:00.000Z",
+              "lastSeenDate": "2026-02-01T06:55:05.747Z",
+              "daysOnMarket": 2,
+              "distance": 1.2622,
+              "daysOld": 159,
+              "correlation": 0.6437
+            },
+            {
+              "id": "4491-W-3500-S,-Apt-A2,-West-Valley-City,-UT-84120",
+              "formattedAddress": "4491 W 3500 S, Apt A2, West Valley City, UT 84120",
+              "addressLine1": "4491 W 3500 S",
+              "addressLine2": "Apt A2",
+              "city": "West Valley City",
+              "state": "UT",
+              "stateFips": "49",
+              "zipCode": "84120",
+              "county": "Salt Lake",
+              "countyFips": "035",
+              "latitude": 40.696312,
+              "longitude": -111.998466,
+              "propertyType": "Townhouse",
+              "bedrooms": 2,
+              "bathrooms": 1.5,
+              "squareFootage": 1598,
+              "lotSize": 871,
+              "yearBuilt": 1979,
+              "status": "Active",
+              "price": 330000,
+              "listingType": "Standard",
+              "listedDate": "2026-06-10T00:00:00.000Z",
+              "removedDate": null,
+              "lastSeenDate": "2026-07-09T09:51:15.493Z",
+              "daysOnMarket": 30,
+              "distance": 1.3598,
+              "daysOld": 1,
+              "correlation": 0.6274
+            },
+            {
+              "id": "5466-W-Paulette-Ave,-West-Valley-City,-UT-84120",
+              "formattedAddress": "5466 W Paulette Ave, West Valley City, UT 84120",
+              "addressLine1": "5466 W Paulette Ave",
+              "addressLine2": null,
+              "city": "West Valley City",
+              "state": "UT",
+              "stateFips": "49",
+              "zipCode": "84120",
+              "county": "Salt Lake",
+              "countyFips": "035",
+              "latitude": 40.688222,
+              "longitude": -112.0216,
+              "propertyType": "Single Family",
+              "bedrooms": 5,
+              "bathrooms": 1,
+              "squareFootage": 2538,
+              "lotSize": 9583,
+              "yearBuilt": 1958,
+              "status": "Inactive",
+              "price": 517000,
+              "listingType": "Standard",
+              "listedDate": "2026-05-15T00:00:00.000Z",
+              "removedDate": "2026-05-20T00:00:00.000Z",
+              "lastSeenDate": "2026-05-19T06:42:35.262Z",
+              "daysOnMarket": 5,
+              "distance": 0.0773,
+              "daysOld": 52,
+              "correlation": 0.5927
+            },
+            {
+              "id": "5461-W-Elaine-Ave-S,-West-Valley-City,-UT-84120",
+              "formattedAddress": "5461 W Elaine Ave S, West Valley City, UT 84120",
+              "addressLine1": "5461 W Elaine Ave S",
+              "addressLine2": null,
+              "city": "West Valley City",
+              "state": "UT",
+              "stateFips": "49",
+              "zipCode": "84120",
+              "county": "Salt Lake",
+              "countyFips": "035",
+              "latitude": 40.6859,
+              "longitude": -112.021378,
+              "propertyType": "Single Family",
+              "bedrooms": 4,
+              "bathrooms": 1,
+              "squareFootage": 1890,
+              "lotSize": 10019,
+              "yearBuilt": 1956,
+              "status": "Inactive",
+              "price": 459000,
+              "listingType": "Standard",
+              "listedDate": "2025-11-19T00:00:00.000Z",
+              "removedDate": "2026-05-19T00:00:00.000Z",
+              "lastSeenDate": "2026-05-18T11:11:48.836Z",
+              "daysOnMarket": 181,
+              "distance": 0.2276,
+              "daysOld": 52,
+              "correlation": 0.5895
+            }
+          ]
+        },
+        "pairedItem": {
+          "item": 1
+        }
+      },
+      {
+        "json": {
+          "price": 404000,
+          "priceRangeLow": 337000,
+          "priceRangeHigh": 471000,
+          "latitude": 40.689126,
+          "longitude": -112.022544,
+          "subjectProperty": {
+            "id": "5508-Maudine-Ave,-Unit-Basement,-West-Valley,-UT-84120",
+            "formattedAddress": "5508 Maudine Ave, Unit Basement, West Valley, UT 84120",
+            "addressLine1": "5508 Maudine Ave",
+            "addressLine2": "Unit Basement",
+            "city": "West Valley",
+            "state": "UT",
+            "stateFips": "49",
+            "zipCode": "84120",
+            "county": "Salt Lake",
+            "countyFips": "035",
+            "latitude": 40.689126,
+            "longitude": -112.022544,
+            "propertyType": "Condo",
+            "bedrooms": 1,
+            "bathrooms": 1,
+            "lastSaleDate": "2024-02-27T00:00:00.000Z",
+            "lastSalePrice": null
+          },
+          "comparables": [
+            {
+              "id": "4716-W-Villa-View-Dr-S,-Unit-C,-West-Valley-City,-UT-84120",
+              "formattedAddress": "4716 W Villa View Dr S, Unit C, West Valley City, UT 84120",
+              "addressLine1": "4716 W Villa View Dr S",
+              "addressLine2": "Unit C",
+              "city": "West Valley City",
+              "state": "UT",
+              "stateFips": "49",
+              "zipCode": "84120",
+              "county": "Salt Lake",
+              "countyFips": "035",
+              "latitude": 40.695518,
+              "longitude": -112.003997,
+              "propertyType": "Condo",
+              "bedrooms": 2,
+              "bathrooms": 1,
+              "squareFootage": 1502,
+              "lotSize": 436,
+              "yearBuilt": 2001,
+              "status": "Inactive",
+              "price": 395000,
+              "listingType": "Standard",
+              "listedDate": "2026-03-20T00:00:00.000Z",
+              "removedDate": "2026-05-07T00:00:00.000Z",
+              "lastSeenDate": "2026-05-06T09:32:28.367Z",
+              "daysOnMarket": 48,
+              "distance": 1.0685,
+              "daysOld": 65,
+              "correlation": 0.882
+            },
+            {
+              "id": "3575-S-Villa-View-Dr-W,-Unit-C,-West-Valley-City,-UT-84120",
+              "formattedAddress": "3575 S Villa View Dr W, Unit C, West Valley City, UT 84120",
+              "addressLine1": "3575 S Villa View Dr W",
+              "addressLine2": "Unit C",
+              "city": "West Valley City",
+              "state": "UT",
+              "stateFips": "49",
+              "zipCode": "84120",
+              "county": "Salt Lake",
+              "countyFips": "035",
+              "latitude": 40.694904,
+              "longitude": -112.001998,
+              "propertyType": "Condo",
+              "bedrooms": 2,
+              "bathrooms": 1.5,
+              "squareFootage": 1167,
+              "lotSize": 436,
+              "yearBuilt": 2000,
+              "status": "Active",
+              "price": 369900,
+              "listingType": "Standard",
+              "listedDate": "2026-04-02T00:00:00.000Z",
+              "removedDate": null,
+              "lastSeenDate": "2026-07-08T11:01:29.123Z",
+              "daysOnMarket": 98,
+              "distance": 1.1493,
+              "daysOld": 1,
+              "correlation": 0.8481
+            },
+            {
+              "id": "3549-S-Villa-View-Dr,-Unit-D,-West-Valley-City,-UT-84120",
+              "formattedAddress": "3549 S Villa View Dr, Unit D, West Valley City, UT 84120",
+              "addressLine1": "3549 S Villa View Dr",
+              "addressLine2": "Unit D",
+              "city": "West Valley City",
+              "state": "UT",
+              "stateFips": "49",
+              "zipCode": "84120",
+              "county": "Salt Lake",
+              "countyFips": "035",
+              "latitude": 40.695131,
+              "longitude": -112.001954,
+              "propertyType": "Condo",
+              "bedrooms": 3,
+              "bathrooms": 1,
+              "squareFootage": 1617,
+              "lotSize": 436,
+              "yearBuilt": 2001,
+              "status": "Active",
+              "price": 447500,
+              "listingType": "Standard",
+              "listedDate": "2026-05-12T00:00:00.000Z",
+              "removedDate": null,
+              "lastSeenDate": "2026-07-09T10:28:28.317Z",
+              "daysOnMarket": 59,
+              "distance": 1.157,
+              "daysOld": 1,
+              "correlation": 0.7858
+            },
+            {
+              "id": "4759-W-Valley-Villa-Dr,-Unit-D,-West-Valley-City,-UT-84120",
+              "formattedAddress": "4759 W Valley Villa Dr, Unit D, West Valley City, UT 84120",
+              "addressLine1": "4759 W Valley Villa Dr",
+              "addressLine2": "Unit D",
+              "city": "West Valley City",
+              "state": "UT",
+              "stateFips": "49",
+              "zipCode": "84120",
+              "county": "Salt Lake",
+              "countyFips": "035",
+              "latitude": 40.694431,
+              "longitude": -112.004908,
+              "propertyType": "Condo",
+              "bedrooms": 3,
+              "bathrooms": 1.5,
+              "squareFootage": 1674,
+              "lotSize": 436,
+              "yearBuilt": 2000,
+              "status": "Active",
+              "price": 340000,
+              "listingType": "Standard",
+              "listedDate": "2026-02-04T00:00:00.000Z",
+              "removedDate": null,
+              "lastSeenDate": "2026-07-08T11:09:22.207Z",
+              "daysOnMarket": 155,
+              "distance": 0.9951,
+              "daysOld": 1,
+              "correlation": 0.7569
+            },
+            {
+              "id": "4719-W-Valley-Villa-Dr-S,-West-Valley-City,-UT-84120",
+              "formattedAddress": "4719 W Valley Villa Dr S, West Valley City, UT 84120",
+              "addressLine1": "4719 W Valley Villa Dr S",
+              "addressLine2": null,
+              "city": "West Valley City",
+              "state": "UT",
+              "stateFips": "49",
+              "zipCode": "84120",
+              "county": "Salt Lake",
+              "countyFips": "035",
+              "latitude": 40.69445,
+              "longitude": -112.004059,
+              "propertyType": "Condo",
+              "bedrooms": 3,
+              "bathrooms": 1.5,
+              "squareFootage": 1674,
+              "lotSize": 436,
+              "yearBuilt": 2000,
+              "status": "Inactive",
+              "price": 394000,
+              "listingType": "Standard",
+              "listedDate": "2026-02-11T00:00:00.000Z",
+              "removedDate": "2026-04-19T00:00:00.000Z",
+              "lastSeenDate": "2026-04-18T10:49:03.526Z",
+              "daysOnMarket": 67,
+              "distance": 1.0371,
+              "daysOld": 82,
+              "correlation": 0.7556
+            },
+            {
+              "id": "4789-W-Valley-Villa-Dr,-Unit-B,-West-Valley-City,-UT-84120",
+              "formattedAddress": "4789 W Valley Villa Dr, Unit B, West Valley City, UT 84120",
+              "addressLine1": "4789 W Valley Villa Dr",
+              "addressLine2": "Unit B",
+              "city": "West Valley City",
+              "state": "UT",
+              "stateFips": "49",
+              "zipCode": "84120",
+              "county": "Salt Lake",
+              "countyFips": "035",
+              "latitude": 40.694605,
+              "longitude": -112.005197,
+              "propertyType": "Condo",
+              "bedrooms": 3,
+              "bathrooms": 2,
+              "squareFootage": 2057,
+              "lotSize": 436,
+              "yearBuilt": 2000,
+              "status": "Active",
+              "price": 399999,
+              "listingType": "Standard",
+              "listedDate": "2026-04-23T00:00:00.000Z",
+              "removedDate": null,
+              "lastSeenDate": "2026-07-09T10:41:54.231Z",
+              "daysOnMarket": 78,
+              "distance": 0.9856,
+              "daysOld": 0,
+              "correlation": 0.7246
+            },
+            {
+              "id": "3689-S-5450-W,-West-Valley-City,-UT-84120",
+              "formattedAddress": "3689 S 5450 W, West Valley City, UT 84120",
+              "addressLine1": "3689 S 5450 W",
+              "addressLine2": null,
+              "city": "West Valley City",
+              "state": "UT",
+              "stateFips": "49",
+              "zipCode": "84120",
+              "county": "Salt Lake",
+              "countyFips": "035",
+              "latitude": 40.692011,
+              "longitude": -112.020623,
+              "propertyType": "Land",
+              "lotSize": 29621,
+              "status": "Active",
+              "price": 535000,
+              "listingType": "Standard",
+              "listedDate": "2026-05-27T00:00:00.000Z",
+              "removedDate": null,
+              "lastSeenDate": "2026-07-09T10:16:39.451Z",
+              "daysOnMarket": 44,
+              "distance": 0.2235,
+              "daysOld": 1,
+              "correlation": 0.6911
+            },
+            {
+              "id": "3615-S-5450-W,-West-Valley-City,-UT-84120",
+              "formattedAddress": "3615 S 5450 W, West Valley City, UT 84120",
+              "addressLine1": "3615 S 5450 W",
+              "addressLine2": null,
+              "city": "West Valley City",
+              "state": "UT",
+              "stateFips": "49",
+              "zipCode": "84120",
+              "county": "Salt Lake",
+              "countyFips": "035",
+              "latitude": 40.694295,
+              "longitude": -112.020932,
+              "propertyType": "Single Family",
+              "bedrooms": 2,
+              "bathrooms": 1,
+              "squareFootage": 1092,
+              "lotSize": 8712,
+              "yearBuilt": 1942,
+              "status": "Active",
+              "price": 275000,
+              "listingType": "Standard",
+              "listedDate": "2026-06-26T00:00:00.000Z",
+              "removedDate": null,
+              "lastSeenDate": "2026-07-09T08:58:50.976Z",
+              "daysOnMarket": 14,
+              "distance": 0.3674,
+              "daysOld": 1,
+              "correlation": 0.6812
+            },
+            {
+              "id": "3315-S-6400-W,-West-Valley-City,-UT-84128",
+              "formattedAddress": "3315 S 6400 W, West Valley City, UT 84128",
+              "addressLine1": "3315 S 6400 W",
+              "addressLine2": null,
+              "city": "West Valley City",
+              "state": "UT",
+              "stateFips": "49",
+              "zipCode": "84128",
+              "county": "Salt Lake",
+              "countyFips": "035",
+              "latitude": 40.70006,
+              "longitude": -112.042667,
+              "propertyType": "Land",
+              "lotSize": 53143,
+              "status": "Inactive",
+              "price": 329900,
+              "listingType": "Standard",
+              "listedDate": "2026-01-14T00:00:00.000Z",
+              "removedDate": "2026-01-29T00:00:00.000Z",
+              "lastSeenDate": "2026-01-28T09:05:13.189Z",
+              "daysOnMarket": 15,
+              "distance": 1.2984,
+              "daysOld": 163,
+              "correlation": 0.6672
+            },
+            {
+              "id": "3896-S-6325-W,-West-Valley-City,-UT-84128",
+              "formattedAddress": "3896 S 6325 W, West Valley City, UT 84128",
+              "addressLine1": "3896 S 6325 W",
+              "addressLine2": null,
+              "city": "West Valley City",
+              "state": "UT",
+              "stateFips": "49",
+              "zipCode": "84128",
+              "county": "Salt Lake",
+              "countyFips": "035",
+              "latitude": 40.687006,
+              "longitude": -112.042303,
+              "propertyType": "Single Family",
+              "bedrooms": 2,
+              "bathrooms": 1,
+              "squareFootage": 1590,
+              "lotSize": 8276,
+              "yearBuilt": 1985,
+              "status": "Inactive",
+              "price": 410000,
+              "listingType": "Standard",
+              "listedDate": "2025-10-24T00:00:00.000Z",
+              "removedDate": "2026-01-13T00:00:00.000Z",
+              "lastSeenDate": "2026-01-12T10:12:48.247Z",
+              "daysOnMarket": 81,
+              "distance": 1.0467,
+              "daysOld": 179,
+              "correlation": 0.6658
+            },
+            {
+              "id": "4732-W-Villa-View-Dr-S,-Unit-D,-West-Valley-City,-UT-84120",
+              "formattedAddress": "4732 W Villa View Dr S, Unit D, West Valley City, UT 84120",
+              "addressLine1": "4732 W Villa View Dr S",
+              "addressLine2": "Unit D",
+              "city": "West Valley City",
+              "state": "UT",
+              "stateFips": "49",
+              "zipCode": "84120",
+              "county": "Salt Lake",
+              "countyFips": "035",
+              "latitude": 40.695572,
+              "longitude": -112.004277,
+              "propertyType": "Condo",
+              "bedrooms": 3,
+              "bathrooms": 3,
+              "squareFootage": 1674,
+              "lotSize": 436,
+              "yearBuilt": 2001,
+              "status": "Active",
+              "price": 430000,
+              "listingType": "Standard",
+              "listedDate": "2026-07-04T00:00:00.000Z",
+              "removedDate": null,
+              "lastSeenDate": "2026-07-09T07:49:42.435Z",
+              "daysOnMarket": 6,
+              "distance": 1.0567,
+              "daysOld": 1,
+              "correlation": 0.6582
+            },
+            {
+              "id": "6479-W-Kings-Dr,-West-Valley-City,-UT-84128",
+              "formattedAddress": "6479 W Kings Dr, West Valley City, UT 84128",
+              "addressLine1": "6479 W Kings Dr",
+              "addressLine2": null,
+              "city": "West Valley City",
+              "state": "UT",
+              "stateFips": "49",
+              "zipCode": "84128",
+              "county": "Salt Lake",
+              "countyFips": "035",
+              "latitude": 40.68439,
+              "longitude": -112.045829,
+              "propertyType": "Single Family",
+              "bathrooms": 2,
+              "squareFootage": 1796,
+              "lotSize": 11761,
+              "yearBuilt": 1977,
+              "status": "Inactive",
+              "price": 459000,
+              "listingType": "Standard",
+              "listedDate": "2026-01-31T00:00:00.000Z",
+              "removedDate": "2026-02-02T00:00:00.000Z",
+              "lastSeenDate": "2026-02-01T06:55:05.747Z",
+              "daysOnMarket": 2,
+              "distance": 1.2645,
+              "daysOld": 159,
+              "correlation": 0.6436
+            },
+            {
+              "id": "4491-W-3500-S,-Apt-A2,-West-Valley-City,-UT-84120",
+              "formattedAddress": "4491 W 3500 S, Apt A2, West Valley City, UT 84120",
+              "addressLine1": "4491 W 3500 S",
+              "addressLine2": "Apt A2",
+              "city": "West Valley City",
+              "state": "UT",
+              "stateFips": "49",
+              "zipCode": "84120",
+              "county": "Salt Lake",
+              "countyFips": "035",
+              "latitude": 40.696312,
+              "longitude": -111.998466,
+              "propertyType": "Townhouse",
+              "bedrooms": 2,
+              "bathrooms": 1.5,
+              "squareFootage": 1598,
+              "lotSize": 871,
+              "yearBuilt": 1979,
+              "status": "Active",
+              "price": 330000,
+              "listingType": "Standard",
+              "listedDate": "2026-06-10T00:00:00.000Z",
+              "removedDate": null,
+              "lastSeenDate": "2026-07-09T09:51:15.493Z",
+              "daysOnMarket": 30,
+              "distance": 1.3571,
+              "daysOld": 1,
+              "correlation": 0.6274
+            },
+            {
+              "id": "5466-W-Paulette-Ave,-West-Valley-City,-UT-84120",
+              "formattedAddress": "5466 W Paulette Ave, West Valley City, UT 84120",
+              "addressLine1": "5466 W Paulette Ave",
+              "addressLine2": null,
+              "city": "West Valley City",
+              "state": "UT",
+              "stateFips": "49",
+              "zipCode": "84120",
+              "county": "Salt Lake",
+              "countyFips": "035",
+              "latitude": 40.688222,
+              "longitude": -112.0216,
+              "propertyType": "Single Family",
+              "bedrooms": 5,
+              "bathrooms": 1,
+              "squareFootage": 2538,
+              "lotSize": 9583,
+              "yearBuilt": 1958,
+              "status": "Inactive",
+              "price": 517000,
+              "listingType": "Standard",
+              "listedDate": "2026-05-15T00:00:00.000Z",
+              "removedDate": "2026-05-20T00:00:00.000Z",
+              "lastSeenDate": "2026-05-19T06:42:35.262Z",
+              "daysOnMarket": 5,
+              "distance": 0.0798,
+              "daysOld": 52,
+              "correlation": 0.5927
+            },
+            {
+              "id": "5461-W-Elaine-Ave-S,-West-Valley-City,-UT-84120",
+              "formattedAddress": "5461 W Elaine Ave S, West Valley City, UT 84120",
+              "addressLine1": "5461 W Elaine Ave S",
+              "addressLine2": null,
+              "city": "West Valley City",
+              "state": "UT",
+              "stateFips": "49",
+              "zipCode": "84120",
+              "county": "Salt Lake",
+              "countyFips": "035",
+              "latitude": 40.6859,
+              "longitude": -112.021378,
+              "propertyType": "Single Family",
+              "bedrooms": 4,
+              "bathrooms": 1,
+              "squareFootage": 1890,
+              "lotSize": 10019,
+              "yearBuilt": 1956,
+              "status": "Inactive",
+              "price": 459000,
+              "listingType": "Standard",
+              "listedDate": "2025-11-19T00:00:00.000Z",
+              "removedDate": "2026-05-19T00:00:00.000Z",
+              "lastSeenDate": "2026-05-18T11:11:48.836Z",
+              "daysOnMarket": 181,
+              "distance": 0.2314,
+              "daysOld": 52,
+              "correlation": 0.5894
+            }
+          ]
+        },
+        "pairedItem": {
+          "item": 2
+        }
+      }
+    ],
+    "Edit Fields1": [
+      {
+        "json": {
+          "subjectProperty": {
+            "formattedAddress": "3890 S Cheryl St, Apt 2, West Valley, UT 84119",
+            "bedrooms": 1,
+            "bathrooms": 1,
+            "squareFootage": 500
+          },
+          "price": 202000,
+          "priceRangeLow": 180000,
+          "priceRangeHigh": 223000
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "subjectProperty": {
+            "formattedAddress": "5508 W Maudine Ave, Unit 3, West Valley, UT 84120",
+            "bedrooms": 1,
+            "bathrooms": 1,
+            "squareFootage": null
+          },
+          "price": 404000,
+          "priceRangeLow": 337000,
+          "priceRangeHigh": 471000
+        },
+        "pairedItem": {
+          "item": 1
+        }
+      },
+      {
+        "json": {
+          "subjectProperty": {
+            "formattedAddress": "5508 Maudine Ave, Unit Basement, West Valley, UT 84120",
+            "bedrooms": 1,
+            "bathrooms": 1,
+            "squareFootage": null
+          },
+          "price": 404000,
+          "priceRangeLow": 337000,
+          "priceRangeHigh": 471000
+        },
+        "pairedItem": {
+          "item": 2
+        }
+      }
+    ],
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "syllabically-leverlike-dawn.ngrok-free.dev",
+            "user-agent": "Mozilla/5.0 (compatible; Google-Apps-Script; beanserver; +https://script.google.com; id: UAEmdDd-bUsze5vg7WHNuA0j3cQt83OmIf5c)",
+            "content-length": "392",
+            "accept-encoding": "gzip, deflate, br",
+            "content-type": "application/json",
+            "x-forwarded-for": "103.187.245.185, 107.178.193.12",
+            "x-forwarded-host": "syllabically-leverlike-dawn.ngrok-free.dev",
+            "x-forwarded-proto": "https"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "NAME": "Jarvy Jive",
+            "PHONE NUMBER": "09569871234",
+            "EMAIL ADDRESS": "jjive@gmail.com",
+            "PROPERTY TYPE": "Townhouse",
+            "PREFERRED CITY": "Salt Lake",
+            "PREFERRED STATE": "UT",
+            "BUDGET RANGE": "500000",
+            "NUMBER OF BEDROOMS": [
+              "2"
+            ],
+            "NUMBER OF BATHROOMS": [
+              "2"
+            ],
+            "Are you planning to Rent or Buy a property?": "Buy a property",
+            "TIMELINE": "2 weeks",
+            "PRE-APPROVED": "Yes, I am pre-approved",
+            "ADDITIONAL NOTES": "n/a"
+          },
+          "webhookUrl": "https://syllabically-leverlike-dawn.ngrok-free.dev/webhook-test/property-request",
+          "executionMode": "test"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "AI LEAD QUALIFIER": [
+      {
+        "json": {
+          "output": {
+            "classification": "hot",
+            "reason": "Jarvy Jive is pre-approved, has a short timeline of 2 weeks, and a budget of $500000 which could be realistic for a townhouse in Salt Lake, UT."
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "AI Email Assistant": [
+      {
+        "json": {
+          "output": {
+            "recipient": "agent",
+            "subject": "[URGENT] Hot Lead: Jarvy Jive - Pre-approved, 2-week timeline, $500k budget in Salt Lake, UT"
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "Send Property Value Qoute": [
+      {
+        "json": {
+          "id": "19f468b6add8942e",
+          "threadId": "19f468b6add8942e",
+          "labelIds": [
+            "SENT"
+          ]
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "Send Urgent Email": [
+      {
+        "json": {
+          "id": "19f46a79530a7fa4",
+          "threadId": "19f46a79530a7fa4",
+          "labelIds": [
+            "UNREAD",
+            "SENT",
+            "INBOX"
+          ]
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "Update row in sheet": [
+      {
+        "json": {
+          "NAME": "Jarvy Jive",
+          "STATUS": "Done"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "AI LEAD QUALIFIER",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI LEAD QUALIFIER",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI LEAD QUALIFIER",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI LEAD QUALIFIER": {
+      "main": [
+        [
+          {
+            "node": "Qualify Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Email Assistant",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Send Urgent Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Customer Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Send Monthly Rent Qoute",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request2": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Send Property Value Qoute",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Email Assistant",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Email Assistant": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Urgent Email": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Customer Email": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Property Value Qoute": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Monthly Rent Qoute": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Qualify Lead": {
+      "main": [
+        [
+          {
+            "node": "AI Email Assistant",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Email Assistant",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "eb02f0c5-e2cc-406a-8816-d828e024381b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "aa1c2d96509f51fe24482bec45395215d0b92b834a9e494b7a5fc06047c0a951"
+  },
+  "id": "vF3-RSHJyImtS6QgvGPsi",
+  "tags": []
+}
